@@ -1,4 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "boxicons/css/boxicons.min.css";
 
 export default function Home() {
   return (
@@ -82,6 +85,11 @@ export default function Home() {
           />
           Examples
         </a>
+        <Link href="/main">
+          <button className="bg-blue-500 text-white p-2 rounded">
+            Go to Main Page
+          </button>
+        </Link>
         <a
           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
           href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
