@@ -4,23 +4,20 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 import { useRouter } from "next/navigation";
-
+type User = {
+  username: string;
+  _id: string;
+  id: string;
+  // add other fields if needed
+};
 export default function Messages() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [users, setUsers] = useState([]);
-  const [friendRequests, setFriendRequests] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [friendRequests, setFriendRequests] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("find");
-
-  useEffect(() => {
-    if (search.length > 2) {
-      fetchUsers();
-    } else {
-      setUsers([]);
-    }
-  }, [search]);
 
   useEffect(() => {
     fetchFriendRequests();
@@ -29,7 +26,7 @@ export default function Messages() {
   const fetchFriendRequests = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/friend-requests",
+        "https://baakipinnetharam.onrender.com/friend-requests",
         {
           withCredentials: true,
         }
@@ -41,10 +38,10 @@ export default function Messages() {
     }
   };
 
-  const respondToRequest = async (requestId, action) => {
+  const respondToRequest = async (requestId: any, action: any) => {
     try {
       await axios.post(
-        "http://localhost:5000/respond-request",
+        "https://baakipinnetharam.onrender.com/respond-request",
         { requestId, action },
         { withCredentials: true }
       );

@@ -21,9 +21,12 @@ export default function AuthPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/session", {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "https://baakipinnetharam.onrender.com/session",
+          {
+            withCredentials: true,
+          }
+        );
         if (response.data.isAuthenticated) {
           setIsLoggedIn(true);
         }
@@ -38,8 +41,8 @@ export default function AuthPage() {
     try {
       setError(null);
       const url = isSignUp
-        ? "http://localhost:5000/signup"
-        : "http://localhost:5000/login";
+        ? "https://baakipinnetharam.onrender.com/signup"
+        : "https://baakipinnetharam.onrender.com/login";
       const requestData = isSignUp
         ? {
             email: data.email,
@@ -64,7 +67,7 @@ export default function AuthPage() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/logout",
+        "https://baakipinnetharam.onrender.com/logout",
         {},
         { withCredentials: true }
       );

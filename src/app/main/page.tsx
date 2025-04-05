@@ -6,14 +6,21 @@ import { useRouter } from "next/navigation";
 import ViewModal from "./ViewModal";
 
 interface DebtDueType {
+  uid: string;
   name: string;
   amount: number;
 }
 
 interface TransactionType {
+  uid: string;
   name: string;
   amount: number;
   formattedTime?: string;
+}
+
+interface Person {
+  uid: string;
+  name: string;
 }
 
 export default function Home() {
@@ -26,11 +33,12 @@ export default function Home() {
   const [modalData, setModalData] = useState<DebtDueType[]>([]);
   const [modalTitle, setModalTitle] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [people, setPeople] = useState<string[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
+
   const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchData = () => {
-    fetch("http://localhost:5000/UserData", {
+    fetch("https://baakipinnetharam.onrender.com/UserData", {
       method: "GET",
       credentials: "include",
     })

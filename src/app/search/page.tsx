@@ -4,14 +4,19 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 import { useRouter } from "next/navigation";
-
+type User = {
+  username: string;
+  _id: string;
+  // add other fields if needed
+};
 export default function FindFriends() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+
   const [activeTab, setActiveTab] = useState("find");
 
   useEffect(() => {
@@ -30,7 +35,7 @@ export default function FindFriends() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:5000/users?search=${search}`,
+        `https://baakipinnetharam.onrender.com/users?search=${search}`,
         {
           withCredentials: true,
         }
@@ -47,7 +52,7 @@ export default function FindFriends() {
   const fetchFriendRequests = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5000/friend-requests",
+        "https://baakipinnetharam.onrender.com/friend-requests",
         {
           withCredentials: true,
         }
@@ -59,10 +64,10 @@ export default function FindFriends() {
     }
   };
 
-  const sendFriendRequest = async (userId) => {
+  const sendFriendRequest = async (userId: any) => {
     try {
       await axios.post(
-        "http://localhost:5000/friend-request",
+        "https://baakipinnetharam.onrender.com/friend-request",
         { userId },
         { withCredentials: true }
       );
@@ -72,10 +77,10 @@ export default function FindFriends() {
     }
   };
 
-  const respondToRequest = async (requestId, action) => {
+  const respondToRequest = async (requestId: any, action: any) => {
     try {
       await axios.post(
-        "http://localhost:5000/respond-request",
+        "https://baakipinnetharam.onrender.com/respond-request",
         { requestId, action },
         { withCredentials: true }
       );
