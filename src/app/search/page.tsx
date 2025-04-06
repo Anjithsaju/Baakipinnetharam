@@ -23,7 +23,7 @@ export default function FindFriends() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:5000/users?search=${search}`,
+        `https://baakipinnetharam.onrender.com/users?search=${search}`,
         { withCredentials: true }
       );
       setUsers(response.data);
@@ -39,7 +39,7 @@ export default function FindFriends() {
   // const fetchFriendRequests = async () => {
   //   try {
   //     const response = await axios.get(
-  //       "http://localhost:5000/friend-requests",
+  //       "https://baakipinnetharam.onrender.com/friend-requests",
   //       { withCredentials: true }
   //     );
   //     setFriendRequests(response.data);
@@ -51,7 +51,7 @@ export default function FindFriends() {
   const sendFriendRequest = async (userId: string) => {
     const promise = toast.promise(
       axios.post(
-        "http://localhost:5000/friend-request",
+        "https://baakipinnetharam.onrender.com/friend-request",
         { userId },
         { withCredentials: true }
       ),
@@ -67,7 +67,7 @@ export default function FindFriends() {
   const respondToRequest = async (requestId: string, action: string) => {
     try {
       await axios.post(
-        "http://localhost:5000/respond-request",
+        "https://baakipinnetharam.onrender.com/respond-request",
         { requestId, action },
         { withCredentials: true }
       );
