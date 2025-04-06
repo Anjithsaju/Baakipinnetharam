@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-
+import Alert from "../alert";
 interface Person {
   uid: string;
   name: string;
@@ -11,12 +11,19 @@ interface AddModalProps {
 }
 
 export default function AddModal({ closeModal, people }: AddModalProps) {
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "warning" | "info";
+    message: string;
+  } | null>(null);
   const [addType, setAddType] = useState("");
   const [selectedPerson, setSelectedPerson] = useState("");
   const [transactionName, setTransactionName] = useState("");
   const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    setLoading(true); // Start loading
+
     const payload =
       addType === "transaction"
         ? {
@@ -45,14 +52,19 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
 
       const data = await response.json();
       if (response.ok) {
-        //alert("Entry added successfully!");
-        closeModal(); // Close modal on success
+        setAlert({ type: "success", message: "Entry added successfully!" });
+        closeModal();
       } else {
-        alert(`Error: ${data.message}`);
+        setAlert({
+          type: "error",
+          message: data.message || "Something went wrong.",
+        });
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("Failed to submit. Try again!");
+      setAlert({ type: "error", message: "Failed to submit. Try again!" });
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -106,9 +118,33 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
             />
             <button
               onClick={handleSubmit}
-              className="bg-green-500 text-white px-4 py-2 rounded w-full"
+              className="bg-green-500 text-white px-4 py-2 rounded w-full flex items-center justify-center"
+              disabled={loading}
             >
-              Submit
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                  ></path>
+                </svg>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         )}
@@ -139,9 +175,33 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
             />
             <button
               onClick={handleSubmit}
-              className="bg-green-500 text-white px-4 py-2 rounded w-full"
+              className="bg-green-500 text-white px-4 py-2 rounded w-full flex items-center justify-center"
+              disabled={loading}
             >
-              Submit
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                  ></path>
+                </svg>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         )}
@@ -154,6 +214,7 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
           Close
         </button>
       </div>
+      {alert && <Alert type={alert.type} message={alert.message} />}
     </div>
   );
 }

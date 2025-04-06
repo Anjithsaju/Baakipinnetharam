@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Addmodal from "./Addmodal";
 import { useRouter } from "next/navigation";
 import ViewModal from "./ViewModal";
+import Alert from "../alert";
 import axios from "axios";
 interface DebtDueType {
   uid: string;
@@ -25,6 +26,7 @@ interface Person {
 
 export default function Home() {
   const router = useRouter();
+  const [show, setShow] = useState(false);
 
   const [dues, setDues] = useState<DebtDueType[]>([]);
   const [debts, setDebts] = useState<DebtDueType[]>([]);

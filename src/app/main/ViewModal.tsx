@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Alert from "../alert"; // Ensure this exists and supports type & message
 
 interface AddModalProps {
   closeModal: () => void;
@@ -17,9 +18,15 @@ export default function ViewModal({
 }: AddModalProps) {
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [tempAmount, setTempAmount] = useState<number | null>(null);
+  const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
 
   const handleSave = async (index: number) => {
     if (tempAmount !== null) {
+      setLoadingIndex(index);
       try {
         const response = await fetch(
           "https://baakipinnetharam.onrender.com/update-entry",
@@ -36,19 +43,28 @@ export default function ViewModal({
 
         if (response.ok) {
           editAmount(index, tempAmount);
+          setAlert({
+            type: "success",
+            message: "Amount updated successfully!",
+          });
         } else {
-          console.error("Failed to update entry");
+          setAlert({ type: "error", message: "Failed to update entry." });
         }
       } catch (error) {
         console.error("Error updating entry:", error);
+        setAlert({
+          type: "error",
+          message: "An error occurred while updating.",
+        });
       }
+      setEditIndex(null);
+      setTempAmount(null);
+      setLoadingIndex(null);
     }
-    setEditIndex(null);
-    setTempAmount(null);
   };
 
   const handleDelete = async (index: number) => {
-    console.log("Deleting entry:", modalData[index]);
+    setLoadingIndex(index);
     try {
       const response = await fetch(
         "https://baakipinnetharam.onrender.com/delete-entry",
@@ -62,12 +78,15 @@ export default function ViewModal({
 
       if (response.ok) {
         deleteEntry(index);
+        setAlert({ type: "success", message: "Entry deleted successfully!" });
       } else {
-        console.error("Failed to delete entry");
+        setAlert({ type: "error", message: "Failed to delete entry." });
       }
     } catch (error) {
       console.error("Error deleting entry:", error);
+      setAlert({ type: "error", message: "An error occurred while deleting." });
     }
+    setLoadingIndex(null);
   };
 
   return (
@@ -93,7 +112,10 @@ export default function ViewModal({
                 {editIndex === index ? (
                   <>
                     <button
-                      onClick={() => setEditIndex(null)}
+                      onClick={() => {
+                        setEditIndex(null);
+                        setTempAmount(null);
+                      }}
                       className="text-red-500 ml-2"
                     >
                       <i className="bx bx-x"></i>
@@ -101,8 +123,13 @@ export default function ViewModal({
                     <button
                       onClick={() => handleSave(index)}
                       className="bg-green-500 text-white px-2 py-1 rounded"
+                      disabled={loadingIndex === index}
                     >
-                      <i className="bx bx-check"></i>
+                      {loadingIndex === index ? (
+                        "⏳"
+                      ) : (
+                        <i className="bx bx-check"></i>
+                      )}
                     </button>
                   </>
                 ) : (
@@ -119,8 +146,13 @@ export default function ViewModal({
                 <button
                   onClick={() => handleDelete(index)}
                   className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
+                  disabled={loadingIndex === index}
                 >
-                  <i className="bx bx-trash"></i>
+                  {loadingIndex === index ? (
+                    "⏳"
+                  ) : (
+                    <i className="bx bx-trash"></i>
+                  )}
                 </button>
               </div>
             </li>
@@ -134,6 +166,8 @@ export default function ViewModal({
           Close
         </button>
       </div>
+
+      {alert && <Alert type={alert.type} message={alert.message} />}
     </div>
   );
 }
