@@ -40,7 +40,7 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchData = () => {
-    fetch("https://baakipinnetharam.onrender.com/UserData", {
+    fetch("http://localhost:5000/UserData", {
       method: "GET",
       credentials: "include",
     })
@@ -90,7 +90,7 @@ export default function Home() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "https://baakipinnetharam.onrender.com/logout",
+        "http://localhost:5000/logout",
         {},
         { withCredentials: true }
       );

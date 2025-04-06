@@ -28,18 +28,15 @@ export default function ViewModal({
     if (tempAmount !== null) {
       setLoadingIndex(index);
       try {
-        const response = await fetch(
-          "https://baakipinnetharam.onrender.com/update-entry",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: modalData[index].name,
-              amount: tempAmount,
-            }),
-          }
-        );
+        const response = await fetch("http://localhost:5000/update-entry", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: modalData[index].name,
+            amount: tempAmount,
+          }),
+        });
 
         if (response.ok) {
           editAmount(index, tempAmount);
@@ -66,15 +63,12 @@ export default function ViewModal({
   const handleDelete = async (index: number) => {
     setLoadingIndex(index);
     try {
-      const response = await fetch(
-        "https://baakipinnetharam.onrender.com/delete-entry",
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: modalData[index].name }),
-        }
-      );
+      const response = await fetch("http://localhost:5000/delete-entry", {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: modalData[index].name }),
+      });
 
       if (response.ok) {
         deleteEntry(index);

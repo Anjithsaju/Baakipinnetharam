@@ -26,7 +26,7 @@ export default function Messages() {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://baakipinnetharam.onrender.com/friend-requests",
+        "http://localhost:5000/friend-requests",
         { withCredentials: true }
       );
       setFriendRequests(response.data);
@@ -42,7 +42,7 @@ export default function Messages() {
   const respondToRequest = async (requestId: string, action: string) => {
     const promise = toast.promise(
       axios.post(
-        "https://baakipinnetharam.onrender.com/respond-request",
+        "http://localhost:5000/respond-request",
         { requestId, action },
         { withCredentials: true }
       ),

@@ -38,17 +38,14 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
           };
 
     try {
-      const response = await fetch(
-        "https://baakipinnetharam.onrender.com/api/add-entry",
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/add-entry", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
       if (response.ok) {
