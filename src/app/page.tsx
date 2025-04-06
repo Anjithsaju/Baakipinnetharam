@@ -1,110 +1,133 @@
-import Image from "next/image";
-import Link from "next/link";
-import "bootstrap/dist/css/bootstrap.min.css";
+"use client";
+import { useRouter } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+export default function LandingPage() {
+  const router = useRouter();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10 space-y-20">
+      {/* Header */}
+      <header className="w-full max-w-6xl flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-wide">
+          Baakipinnetharam 💸
+        </h1>
+        <button
+          onClick={() => router.push("/main")}
+          className="bg-yellow-400 text-black font-semibold px-5 py-2.5 rounded-full hover:bg-yellow-300 transition duration-300"
+        >
+          Enter App
+        </button>
+      </header>
+
+      {/* Hero Section */}
+      <section className="text-center max-w-4xl w-full space-y-12">
+        <h2 className="text-4xl sm:text-5xl font-extrabold leading-tight">
+          Never lose track of{" "}
+          <span className="text-yellow-400">who owes what</span>
+        </h2>
+
+        <div className="flex flex-col lg:flex-row items-center gap-10 text-lg text-gray-300">
+          {/* Text Section */}
+          <div className="flex-1 text-left">
+            <p>
+              <strong>“Baakipinnetharam”</strong> — bet you’ve heard your
+              friends say this after splitting a bill, right? But let’s be
+              honest, you never really remember who owes what. I’ve been there —
+              too many times. Not anymore!
+            </p>
+          </div>
+
+          {/* Image with speech bubble */}
+          <div className="relative flex-shrink-0 w-52 h-52 rounded-xl overflow shadow-lg border-2 border-yellow-400">
+            <img
+              src="https://in.bmscdn.com/iedb/artist/images/website/poster/large/suresh-krishna-1080679-1684480088.jpg"
+              alt="Suresh Krishna"
+              className="w-full h-full object-cover rounded-xl"
             />
-            Deploy now
-          </a>
+            <div className="absolute -top-6 -right-8 bg-white text-black text-sm font-semibold px-3 py-2 rounded-full shadow-md rotate-4">
+              Baakipinnetharam!
+            </div>
+          </div>
+        </div>
+
+        <div className="text-left text-gray-300">
+          <p>
+            Introducing <strong>Baakipinnetharam</strong> — your personal
+            “kanakku” keeper. Because let’s face it,{" "}
+            <em>“boolokathinte sthapanam thanne kanakkil alle!”</em>
+            <br />
+            <br />
+            So next time your friend says <strong>baakipinnetharam</strong>,
+            just smile. We’ve got your back. 😎
+          </p>
+        </div>
+
+        <button
+          onClick={() => router.push("/login")}
+          className="mt-6 px-6 py-3 bg-yellow-400 text-black rounded-full font-semibold hover:bg-yellow-300 transition duration-300"
+        >
+          Get Started
+        </button>
+      </section>
+
+      {/* Features Intro */}
+      <section className="text-center max-w-2xl w-full space-y-4">
+        <h2 className="text-3xl font-bold text-yellow-400">Our Features</h2>
+        <p className="text-lg text-gray-300">
+          Whether it's splitting rent, dinner, or a coffee — Baakipinnetharam
+          has your back. Manage friends, track expenses, and chat your way
+          through it.
+        </p>
+      </section>
+
+      {/* Features Section */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 w-full max-w-6xl text-center">
+        {[
+          {
+            icon: "bx-wallet",
+            title: "Split Expenses",
+            desc: "Track who paid what and settle up easily in groups.",
+          },
+          {
+            icon: "bx-user-plus",
+            title: "Manage Friends",
+            desc: "Send & accept friend requests to keep your expense circle tight.",
+          },
+          {
+            icon: "bx-chat",
+            title: "Chat Instantly",
+            desc: "Discuss expenses, plans, and reimbursements right in-app.",
+          },
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="bg-gray-800 rounded-2xl p-6 shadow-lg hover:scale-105 hover:shadow-yellow-300/30 transition-all duration-300"
+          >
+            <i className={`bx ${item.icon} text-5xl text-yellow-400 mb-4`}></i>
+            <h3 className="text-xl font-bold mb-2 text-white">{item.title}</h3>
+            <p className="text-gray-400">{item.desc}</p>
+          </div>
+        ))}
+      </section>
+
+      {/* Footer */}
+      <footer className="mt-20 text-gray-500 text-sm text-center space-y-2">
+        <p>
+          © 2025 <strong>Baakipinnetharam</strong>. Built for those who always
+          say <em>“baaki pinne tharam.”</em> 😎
+        </p>
+        <p>
+          Created by{" "}
           <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="https://anjithsaju.github.io/Portfolio/"
             target="_blank"
             rel="noopener noreferrer"
+            className="text-yellow-400 hover:underline"
           >
-            Read our docs
+            Anjith Saju
           </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <Link href="/main">
-          <button className="bg-blue-500 text-white p-2 rounded">
-            Go to Main Page
-          </button>
-        </Link>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        </p>
       </footer>
     </div>
   );
