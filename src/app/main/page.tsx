@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Addmodal from "./Addmodal";
 import { useRouter } from "next/navigation";
 import ViewModal from "./ViewModal";
-
+import axios from "axios";
 interface DebtDueType {
   uid: string;
   name: string;
@@ -85,7 +85,20 @@ export default function Home() {
   const openAddModal = () => {
     setIsAddModalOpen(true);
   };
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "https://baakipinnetharam.onrender.com/logout",
+        {},
+        { withCredentials: true }
+      );
+      console.log("Logout successful!");
 
+      router.push("/login");
+    } catch (err: any) {
+      console.error("Logout failed.", err);
+    }
+  };
   const totalDues = dues.reduce((sum, item) => sum + item.amount, 0);
   const totalDebts = debts.reduce((sum, item) => sum + item.amount, 0);
   const totalTransactions = transactions.reduce(
@@ -167,7 +180,8 @@ export default function Home() {
             <i className="bx bx-envelope"></i>
           </button>
           <button
-            onClick={() => router.push("/profile")}
+            // onClick={() => router.push("/profile")}
+            onClick={handleLogout}
             className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
           >
             <i className="bx bx-user"></i>
