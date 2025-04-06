@@ -7,8 +7,8 @@ import ClipLoader from "react-spinners/ClipLoader";
 import { Toaster, toast } from "react-hot-toast";
 
 type User = {
-  username: string;
-  _id: string;
+  name: string;
+  uid: string;
 };
 
 export default function FindFriends() {
@@ -23,7 +23,7 @@ export default function FindFriends() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://baakipinnetharam.onrender.com/users?search=${search}`,
+        `http://localhost:5000/users?search=${search}`,
         { withCredentials: true }
       );
       setUsers(response.data);
@@ -39,7 +39,7 @@ export default function FindFriends() {
   // const fetchFriendRequests = async () => {
   //   try {
   //     const response = await axios.get(
-  //       "https://baakipinnetharam.onrender.com/friend-requests",
+  //       "http://localhost:5000/friend-requests",
   //       { withCredentials: true }
   //     );
   //     setFriendRequests(response.data);
@@ -51,7 +51,7 @@ export default function FindFriends() {
   const sendFriendRequest = async (userId: string) => {
     const promise = toast.promise(
       axios.post(
-        "https://baakipinnetharam.onrender.com/friend-request",
+        "http://localhost:5000/friend-request",
         { userId },
         { withCredentials: true }
       ),
@@ -67,7 +67,7 @@ export default function FindFriends() {
   const respondToRequest = async (requestId: string, action: string) => {
     try {
       await axios.post(
-        "https://baakipinnetharam.onrender.com/respond-request",
+        "http://localhost:5000/respond-request",
         { requestId, action },
         { withCredentials: true }
       );
@@ -140,12 +140,12 @@ export default function FindFriends() {
         <ul className="mt-4 w-80">
           {users.map((user) => (
             <li
-              key={user._id}
+              key={user.uid}
               className="flex justify-between p-2 border-black mb-2 bg-gray-300 rounded-[11px] text-lg items-center px-6 text-black sm:px-4 md:px-6 lg:px-8"
             >
-              <span>{user.username}</span>
+              <span>{user.name}</span>
               <button
-                onClick={() => sendFriendRequest(user._id)}
+                onClick={() => sendFriendRequest(user.uid)}
                 className="bg-blue-500 text-white px-2 py-1 rounded"
               >
                 Add Friend
