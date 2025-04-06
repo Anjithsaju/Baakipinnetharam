@@ -26,6 +26,7 @@ interface Person {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function Home() {
   }, []);
 
   if (checking) return <p>Checking session...</p>;
-  const router = useRouter();
+
   const [show, setShow] = useState(false);
 
   const [dues, setDues] = useState<DebtDueType[]>([]);
