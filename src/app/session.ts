@@ -1,6 +1,6 @@
 export async function isUserInSession(): Promise<boolean> {
   try {
-    const res = await fetch("/api/check-session", {
+    const res = await fetch("https://baakipinnetharam.onrender.com/session", {
       method: "GET",
       credentials: "include",
     });
