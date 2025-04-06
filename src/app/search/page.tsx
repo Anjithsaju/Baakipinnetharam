@@ -9,42 +9,16 @@ import { Toaster, toast } from "react-hot-toast";
 type User = {
   username: string;
   _id: string;
-  uid: string;
 };
 
 export default function FindFriends() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<User[]>([]);
-  const [currentUser, setCurrentUser] = useState<any | null>(null); // Current user can be of any type initially
-  const [friendsList, setFriendsList] = useState<string[]>([]); // Friend names
+  const [friendRequests, setFriendRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch the current user and their friends
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await axios.get(
-        "https://baakipinnetharam.onrender.com/UserData",
-        {
-          withCredentials: true,
-        }
-      );
-      const { user, friends } = response.data;
-
-      // Set current user data
-      setCurrentUser(user);
-
-      // Set friends list (using uid to filter them out later)
-      const friendsUids = friends.map((friend: any) => friend.uid);
-      setFriendsList(friendsUids);
-    } catch (err) {
-      toast.error("Failed to fetch current user");
-      setError("Failed to fetch current user");
-    }
-  };
-
-  // Fetch users based on search query
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -52,15 +26,7 @@ export default function FindFriends() {
         `https://baakipinnetharam.onrender.com/users?search=${search}`,
         { withCredentials: true }
       );
-
-      // Filter out the current user and their friends based on uid
-      const allUsers: User[] = response.data;
-      const filteredUsers = allUsers.filter(
-        (user) =>
-          user.uid !== currentUser?.uid && !friendsList.includes(user.uid) // Filter by uid
-      );
-
-      setUsers(filteredUsers);
+      setUsers(response.data);
       setError(null);
     } catch (err) {
       toast.error("Failed to fetch users");
@@ -69,6 +35,18 @@ export default function FindFriends() {
       setLoading(false);
     }
   };
+
+  // const fetchFriendRequests = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       "https://baakipinnetharam.onrender.com/friend-requests",
+  //       { withCredentials: true }
+  //     );
+  //     setFriendRequests(response.data);
+  //   } catch (err) {
+  //     toast.error("Failed to fetch friend requests");
+  //   }
+  // };
 
   const sendFriendRequest = async (userId: string) => {
     const promise = toast.promise(
@@ -86,15 +64,28 @@ export default function FindFriends() {
     await promise;
   };
 
-  useEffect(() => {
-    fetchCurrentUser(); // Fetch current user and their friends when component mounts
-  }, []);
+  const respondToRequest = async (requestId: string, action: string) => {
+    try {
+      await axios.post(
+        "https://baakipinnetharam.onrender.com/respond-request",
+        { requestId, action },
+        { withCredentials: true }
+      );
+      toast.success(`Friend request ${action}ed`);
+      // fetchFriendRequests();
+    } catch {
+      toast.error("Failed to respond to request");
+    }
+  };
 
   useEffect(() => {
-    if (search.length > 2)
-      fetchUsers(); // Fetch users when search query changes
+    if (search.length > 2) fetchUsers();
     else setUsers([]);
-  }, [search, currentUser, friendsList]); // Re-run when current user or friends list changes
+  }, [search]);
+
+  // useEffect(() => {
+  //   fetchFriendRequests();
+  // }, []);
 
   return (
     <div
@@ -103,7 +94,6 @@ export default function FindFriends() {
     >
       <Toaster position="top-right" />
 
-      {/* Nav Buttons */}
       <div className="relative flex justify-center items-center gap-2 w-full my-4 text-black">
         <div className="bg-gray-300 rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
           {["/history", "/search", "/main", "/messages", "/profile"].map(
