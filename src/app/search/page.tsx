@@ -5,13 +5,29 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Toaster, toast } from "react-hot-toast";
-
+import { isUserInSession } from "../session";
 type User = {
   name: string;
   uid: string;
 };
 
 export default function FindFriends() {
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (!isLoggedIn) {
+        router.push("/");
+      } else {
+        setChecking(false);
+      }
+    }
+
+    check();
+  }, []);
+
+  if (checking) return <p>Checking session...</p>;
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<User[]>([]);

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ViewModal from "./ViewModal";
 import Alert from "../alert";
 import axios from "axios";
+import { isUserInSession } from "../session";
 interface DebtDueType {
   uid: string;
   name: string;
@@ -25,6 +26,22 @@ interface Person {
 }
 
 export default function Home() {
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (!isLoggedIn) {
+        router.push("/");
+      } else {
+        setChecking(false);
+      }
+    }
+
+    check();
+  }, []);
+
+  if (checking) return <p>Checking session...</p>;
   const router = useRouter();
   const [show, setShow] = useState(false);
 

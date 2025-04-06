@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-
+import { isUserInSession } from "../session";
 interface AuthForm {
   email: string;
   username?: string;
@@ -12,6 +12,17 @@ interface AuthForm {
 }
 
 export default function AuthPage() {
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (isLoggedIn) {
+        router.push("/main");
+      }
+    }
+
+    check();
+  }, []);
+
   const { register, handleSubmit, reset } = useForm<AuthForm>();
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);

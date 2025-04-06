@@ -5,7 +5,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Toaster, toast } from "react-hot-toast";
-
+import { isUserInSession } from "../session";
 type User = {
   username: string;
   _id: string;
@@ -13,6 +13,22 @@ type User = {
 };
 
 export default function Messages() {
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (!isLoggedIn) {
+        router.push("/");
+      } else {
+        setChecking(false);
+      }
+    }
+
+    check();
+  }, []);
+
+  if (checking) return <p>Checking session...</p>;
   const router = useRouter();
   const [friendRequests, setFriendRequests] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
