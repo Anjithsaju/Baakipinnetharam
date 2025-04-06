@@ -15,20 +15,6 @@ type User = {
 export default function Messages() {
   const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
-    async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (!isLoggedIn) {
-        router.push("/");
-      } else {
-        setChecking(false);
-      }
-    }
-
-    check();
-  }, []);
-
-  if (checking) return <p>Checking session...</p>;
   const router = useRouter();
   const [friendRequests, setFriendRequests] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,7 +57,20 @@ export default function Messages() {
     await promise;
     fetchFriendRequests(); // Refresh after action
   };
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (!isLoggedIn) {
+        router.push("/");
+      } else {
+        setChecking(false);
+      }
+    }
 
+    check();
+  }, []);
+
+  //if (checking) return <p>Checking session...</p>;
   return (
     <div
       style={{ background: "linear-gradient(62deg, black, #00206b)" }}

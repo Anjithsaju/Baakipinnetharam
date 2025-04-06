@@ -29,21 +29,6 @@ export default function Home() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
-    async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (!isLoggedIn) {
-        router.push("/");
-      } else {
-        setChecking(false);
-      }
-    }
-
-    check();
-  }, []);
-
-  if (checking) return <p>Checking session...</p>;
-
   const [show, setShow] = useState(false);
 
   const [dues, setDues] = useState<DebtDueType[]>([]);
@@ -125,7 +110,20 @@ export default function Home() {
     (sum, item) => sum + item.amount,
     0
   );
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (!isLoggedIn) {
+        router.push("/");
+      } else {
+        setChecking(false);
+      }
+    }
 
+    check();
+  }, []);
+
+  //if (checking) return <p>Checking session...</p>;
   return (
     <div
       style={{ background: "linear-gradient(62deg, black, #00206b)" }}

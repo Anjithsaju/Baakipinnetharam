@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { isUserInSession } from "../session";
+
 interface AuthForm {
   email: string;
   username?: string;
@@ -12,45 +13,23 @@ interface AuthForm {
 }
 
 export default function AuthPage() {
-  useEffect(() => {
-    async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (isLoggedIn) {
-        router.push("/main");
-      }
-    }
-
-    check();
-  }, []);
-
-  const { register, handleSubmit, reset } = useForm<AuthForm>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AuthForm>();
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await axios.get(
-          "https://baakipinnetharam.onrender.com/session",
-          {
-            withCredentials: true,
-          }
-        );
-        if (response.data.isAuthenticated) {
-          setIsLoggedIn(true);
-        }
-      } catch (err) {
-        setIsLoggedIn(false);
-      }
-    };
-    checkSession();
-  }, []);
 
   const onSubmit = async (data: AuthForm) => {
     try {
       setError(null);
+      setLoading(true);
+
       const url = isSignUp
         ? "https://baakipinnetharam.onrender.com/signup"
         : "https://baakipinnetharam.onrender.com/login";
@@ -68,7 +47,7 @@ export default function AuthPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Same as withCredentials: true in axios
+        credentials: "include",
         body: JSON.stringify(requestData),
       });
 
@@ -78,12 +57,15 @@ export default function AuthPage() {
         throw new Error(result.message || "Authentication failed.");
       }
 
-      console.log(result.message);
+      //alert(result.message);
       setIsLoggedIn(true);
       reset();
       router.push("/main");
     } catch (err: any) {
       setError(err.message || "Authentication failed.");
+      //alert(err.message || "Authentication failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,37 +84,62 @@ export default function AuthPage() {
     }
   };
 
+  useEffect(() => {
+    async function check() {
+      const isLoggedIn = await isUserInSession();
+      if (isLoggedIn) {
+        router.push("/main");
+      }
+    }
+    check();
+  }, []);
+
   return (
     <div
       style={{ background: "linear-gradient(62deg, black, #00206b)" }}
       className="flex flex-col items-center justify-center min-h-screen"
     >
-      {/* Title */}
-      {/* <h2 className="text-white font-semibold text-[30px] absolute top-10">
-        Baaki Pinne Tharam
-      </h2> */}
-
-      <h2 className="text-2xl font-bold">
+      <h2 className="text-2xl font-bold text-white">
         {isLoggedIn ? "Welcome!" : isSignUp ? "Sign Up" : "Login"}
       </h2>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4 mt-4"
+        className="flex flex-col gap-4 mt-4  p-6 rounded shadow-md w-[300px]"
       >
         <input
-          {...register("email", { required: "Email is required" })}
+          {...register("email", {
+            required: "Email is required",
+            pattern: {
+              value: /^\S+@\S+\.\S+$/,
+              message: "Invalid email format",
+            },
+          })}
           type="email"
           placeholder="Email"
           className="border p-2"
         />
+        {errors.email && <p className="text-red-500">{errors.email.message}</p>}
+
         {isSignUp && (
-          <input
-            {...register("username", { required: "Username is required" })}
-            placeholder="Username"
-            className="border p-2"
-          />
+          <>
+            <input
+              {...register("username", {
+                required: "Username is required",
+                minLength: {
+                  value: 3,
+                  message: "Username must be at least 3 characters",
+                },
+              })}
+              placeholder="Username"
+              className="border p-2"
+            />
+            {errors.username && (
+              <p className="text-red-500">{errors.username.message}</p>
+            )}
+          </>
         )}
+
         <input
           {...register("password", {
             required: "Password is required",
@@ -142,19 +149,49 @@ export default function AuthPage() {
           placeholder="Password"
           className="border p-2"
         />
-        <button type="submit" className="bg-blue-500 text-white p-2">
-          {isSignUp ? "Sign Up" : "Login"}
+        {errors.password && (
+          <p className="text-red-500">{errors.password.message}</p>
+        )}
+
+        <button
+          type="submit"
+          className="bg-blue-500 text-white p-2 rounded flex items-center justify-center gap-2"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.372 0 0 5.372 0 12h4z"
+                ></path>
+              </svg>
+              <span>Loading...</span>
+            </>
+          ) : (
+            <span>{isSignUp ? "Sign Up" : "Login"}</span>
+          )}
         </button>
       </form>
-
-      {/* <button onClick={handleLogout} className="bg-red-500 text-white p-2 mt-4">
-        Logout
-      </button> */}
 
       {!isLoggedIn && (
         <button
           onClick={() => setIsSignUp(!isSignUp)}
-          className="text-blue-500 mt-4"
+          className="text-blue-300 mt-4 underline"
         >
           {isSignUp
             ? "Already have an account? Login"

@@ -9,9 +9,7 @@ export default function LandingPage() {
     <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10 space-y-20">
       {/* Header */}
       <header className="w-full max-w-6xl flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-wide">
-          Baakipinnetharam 💸
-        </h1>
+        <h1 className="text-3xl font-bold tracking-wide">Baakipinnetharam</h1>
         <button
           onClick={() => router.push("/main")}
           className="bg-yellow-400 text-black font-semibold px-5 py-2.5 rounded-full hover:bg-yellow-300 transition duration-300"
