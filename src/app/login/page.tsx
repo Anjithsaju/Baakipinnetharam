@@ -43,6 +43,7 @@ export default function AuthPage() {
       const url = isSignUp
         ? "https://baakipinnetharam.onrender.com/signup"
         : "https://baakipinnetharam.onrender.com/login";
+
       const requestData = isSignUp
         ? {
             email: data.email,
@@ -51,16 +52,27 @@ export default function AuthPage() {
           }
         : { email: data.email, password: data.password };
 
-      const response = await axios.post(url, requestData, {
-        withCredentials: true,
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // Same as withCredentials: true in axios
+        body: JSON.stringify(requestData),
       });
 
-      console.log(response.data.message);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Authentication failed.");
+      }
+
+      console.log(result.message);
       setIsLoggedIn(true);
       reset();
       router.push("/main");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Authentication failed.");
+      setError(err.message || "Authentication failed.");
     }
   };
 
