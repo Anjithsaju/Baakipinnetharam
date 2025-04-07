@@ -108,53 +108,55 @@ export default function ViewModal({
                 <span>₹{item.amount}</span>
               )}
 
-              <div className="flex gap-2">
-                {editIndex === index ? (
-                  <>
+              {modalTitle === "Dues" && (
+                <div className="flex gap-2">
+                  {editIndex === index ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditIndex(null);
+                          setTempAmount(null);
+                        }}
+                        className="text-red-500 ml-2"
+                      >
+                        <i className="bx bx-x"></i>
+                      </button>
+                      <button
+                        onClick={() => handleSave(index)}
+                        className="bg-green-500 text-white px-2 py-1 rounded"
+                        disabled={loadingIndex === index}
+                      >
+                        {loadingIndex === index ? (
+                          "⏳"
+                        ) : (
+                          <i className="bx bx-check"></i>
+                        )}
+                      </button>
+                    </>
+                  ) : (
                     <button
                       onClick={() => {
-                        setEditIndex(null);
-                        setTempAmount(null);
+                        setEditIndex(index);
+                        setTempAmount(item.amount);
                       }}
-                      className="text-red-500 ml-2"
                     >
-                      <i className="bx bx-x"></i>
+                      <i className="bx bx-edit-alt"></i>
                     </button>
-                    <button
-                      onClick={() => handleSave(index)}
-                      className="bg-green-500 text-white px-2 py-1 rounded"
-                      disabled={loadingIndex === index}
-                    >
-                      {loadingIndex === index ? (
-                        "⏳"
-                      ) : (
-                        <i className="bx bx-check"></i>
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditIndex(index);
-                      setTempAmount(item.amount);
-                    }}
-                  >
-                    <i className="bx bx-edit-alt"></i>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => handleDelete(index)}
-                  className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
-                  disabled={loadingIndex === index}
-                >
-                  {loadingIndex === index ? (
-                    "⏳"
-                  ) : (
-                    <i className="bx bx-trash"></i>
                   )}
-                </button>
-              </div>
+
+                  <button
+                    onClick={() => handleDelete(index)}
+                    className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
+                    disabled={loadingIndex === index}
+                  >
+                    {loadingIndex === index ? (
+                      "⏳"
+                    ) : (
+                      <i className="bx bx-trash"></i>
+                    )}
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>
