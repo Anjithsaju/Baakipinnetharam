@@ -53,7 +53,7 @@ export default function LandingPage() {
           <p>
             Introducing <strong>Baakipinnetharam</strong> — your personal
             “kanakku” keeper. Because let’s face it,{" "}
-            <em>“boolokathinte sthapanam thanne kanakkil alle!”</em>
+            <em>“boogolothinte spathanam thanne kanakkil alle!”</em>
             <br />
             <br />
             So next time your friend says <strong>baakipinnetharam</strong>,
