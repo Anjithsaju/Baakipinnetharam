@@ -25,6 +25,12 @@ export default function ViewModal({
     type: "success" | "error" | "info";
     message: string;
   } | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isVisible: boolean;
+    gpayid: string | null;
+    name: string;
+    amount: number;
+  }>({ isVisible: false, gpayid: null, name: "", amount: 0 });
 
   const handleSave = async (index: number) => {
     if (tempAmount !== null) {
@@ -110,6 +116,48 @@ export default function ViewModal({
     }
     setLoadingIndex(null);
   };
+  const handlePayNow = async (index: number, item: any) => {
+    setLoadingIndex(index);
+    try {
+      const person = people.find((person) => person.name === item.name);
+      if (person?.uid) {
+        const gpayid = await getgpayid(person?.uid);
+        console.log("GPay ID:", gpayid);
+        if (gpayid != null) {
+          setConfirmModal({
+            isVisible: true,
+            gpayid,
+            name: item.name,
+            amount: Number(item.amount),
+          });
+        } else {
+          console.log("GPay ID not available for this person.");
+          setAlert({
+            type: "error",
+            message: "GPay ID not available for this person.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching GPay ID:", error);
+      setAlert({
+        type: "error",
+        message: "An error occurred while fetching GPay ID.",
+      });
+    } finally {
+      setLoadingIndex(null);
+    }
+  };
+
+  const proceedToPayment = () => {
+    if (confirmModal.gpayid) {
+      window.open(
+        `upi://pay?pa=${confirmModal.gpayid}&pn=${confirmModal.name}&am=${confirmModal.amount}&cu=INR&url=https://baakipinnetharam.onrender.com`,
+        "_blank"
+      );
+    }
+    setConfirmModal({ isVisible: false, gpayid: null, name: "", amount: 0 });
+  };
 
   return (
     <div className="fixed inset-0 text-black bg-opacity-50 flex justify-center items-center">
@@ -182,30 +230,15 @@ export default function ViewModal({
 
               {modalTitle === "Debts" && (
                 <button
-                  onClick={async () => {
-                    const person = people.find(
-                      (person) => person.name === item.name
-                    );
-                    if (person?.uid) {
-                      const gpayid = await getgpayid(person?.uid);
-                      console.log("GPay ID:", gpayid);
-                      if (gpayid != null) {
-                        window.open(
-                          `upi://pay?pa=${gpayid}&pn=${item.name}&am=${item.amount}&cu=INR&url=https://baakipinnetharam.onrender.com`,
-                          "_blank"
-                        );
-                      } else {
-                        console.log("GPay ID not available for this person.");
-                        setAlert({
-                          type: "error",
-                          message: "GPay ID not available for this person.",
-                        });
-                      }
-                    }
-                  }}
-                  className="bg-blue-500 text-white px-2 py-1 rounded"
+                  onClick={() => handlePayNow(index, item)}
+                  className={`bg-blue-500 text-white px-2 py-1 rounded ${
+                    loadingIndex === index
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                  disabled={loadingIndex === index}
                 >
-                  Pay Now
+                  {loadingIndex === index ? "⏳Loading..." : "Pay Now"}
                 </button>
               )}
             </li>
@@ -221,6 +254,38 @@ export default function ViewModal({
       </div>
 
       {alert && <Alert type={alert.type} message={alert.message} />}
+      {confirmModal.isVisible && (
+        <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h3 className="text-lg font-semibold mb-4">Confirm Payment</h3>
+            <p>
+              GPay ID found for <strong>{confirmModal.name}</strong>. Proceed to
+              payment of ₹{confirmModal.amount}?
+            </p>
+            <div className="flex justify-end gap-4 mt-4">
+              <button
+                onClick={() =>
+                  setConfirmModal({
+                    isVisible: false,
+                    gpayid: null,
+                    name: "",
+                    amount: 0,
+                  })
+                }
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={proceedToPayment}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
