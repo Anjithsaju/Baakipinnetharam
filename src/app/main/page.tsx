@@ -239,6 +239,7 @@ export default function Home() {
             refreshData();
           }}
           modalData={modalData}
+          people={people}
           modalTitle={modalTitle}
           editAmount={(index, newAmount) => {
             const updatedData = [...modalData];

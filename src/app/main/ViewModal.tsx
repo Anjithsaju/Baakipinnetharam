@@ -3,8 +3,9 @@ import Alert from "../alert"; // Ensure this exists and supports type & message
 
 interface AddModalProps {
   closeModal: () => void;
-  modalData: { name: string; amount: number; uid: string }[];
+  modalData: { name: string; amount: number; uid: string; gpayid?: string }[];
   modalTitle: string;
+  people: { uid: string; name: string; gpayid?: string }[];
   editAmount: (index: number, newAmount: number) => void;
   deleteEntry: (index: number) => void;
 }
@@ -14,6 +15,7 @@ export default function ViewModal({
   modalData,
   modalTitle,
   editAmount,
+  people,
   deleteEntry,
 }: AddModalProps) {
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -62,7 +64,27 @@ export default function ViewModal({
       setLoadingIndex(null);
     }
   };
-
+  const getgpayid = async (uid: string) => {
+    try {
+      const response = await fetch(
+        "https://baakipinnetharam.onrender.com/getgpayid",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid }),
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        return data.gpayId;
+      }
+      throw new Error("Failed to fetch GPay ID");
+    } catch (error) {
+      console.error("Error fetching GPay ID:", error);
+      return null;
+    }
+  };
   const handleDelete = async (index: number) => {
     setLoadingIndex(index);
     try {
@@ -156,6 +178,35 @@ export default function ViewModal({
                     )}
                   </button>
                 </div>
+              )}
+
+              {modalTitle === "Debts" && (
+                <button
+                  onClick={async () => {
+                    const person = people.find(
+                      (person) => person.name === item.name
+                    );
+                    if (person?.uid) {
+                      const gpayid = await getgpayid(person?.uid);
+                      console.log("GPay ID:", gpayid);
+                      if (gpayid != null) {
+                        window.open(
+                          `upi://pay?pa=${gpayid}&pn=${item.name}&am=${item.amount}&cu=INR&url=https://baakipinnetharam.onrender.com`,
+                          "_blank"
+                        );
+                      } else {
+                        console.log("GPay ID not available for this person.");
+                        setAlert({
+                          type: "error",
+                          message: "GPay ID not available for this person.",
+                        });
+                      }
+                    }
+                  }}
+                  className="bg-blue-500 text-white px-2 py-1 rounded"
+                >
+                  Pay Now
+                </button>
               )}
             </li>
           ))}
