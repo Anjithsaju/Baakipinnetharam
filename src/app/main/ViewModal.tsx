@@ -152,7 +152,9 @@ export default function ViewModal({
   const proceedToPayment = () => {
     if (confirmModal.gpayid) {
       window.open(
-        `upi://pay?pa=${confirmModal.gpayid}&pn=${confirmModal.name}&am=${confirmModal.amount}&cu=INR&url=https://baakipinnetharam.onrender.com`,
+        `upi://pay?pa=${confirmModal.gpayid}&pn=${
+          confirmModal.name
+        }&am=${Number(confirmModal.amount)}&cu=INR&tn=Baakipinnetharam`,
         "_blank"
       );
     }
