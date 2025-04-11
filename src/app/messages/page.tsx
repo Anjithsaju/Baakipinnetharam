@@ -27,10 +27,18 @@ export default function Messages() {
   const fetchFriendRequests = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
       const response = await axios.get(
         "https://baakipinnetharam.onrender.com/friend-requests",
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          withCredentials: true,
+        }
       );
+
       setFriendRequests(response.data);
       setError(null);
     } catch (err) {
@@ -42,11 +50,18 @@ export default function Messages() {
   };
 
   const respondToRequest = async (requestId: string, action: string) => {
+    const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
     const promise = toast.promise(
       axios.post(
         "https://baakipinnetharam.onrender.com/respond-request",
         { requestId, action },
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          withCredentials: true,
+        }
       ),
       {
         loading: `Processing...`,
@@ -57,18 +72,18 @@ export default function Messages() {
     await promise;
     fetchFriendRequests(); // Refresh after action
   };
-  useEffect(() => {
-    async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (!isLoggedIn) {
-        router.push("/");
-      } else {
-        setChecking(false);
-      }
-    }
+  // useEffect(() => {
+  //   async function check() {
+  //     const isLoggedIn = await isUserInSession();
+  //     if (!isLoggedIn) {
+  //       router.push("/");
+  //     } else {
+  //       setChecking(false);
+  //     }
+  //   }
 
-    check();
-  }, []);
+  //   check();
+  // }, []);
 
   //if (checking) return <p>Checking session...</p>;
   return (

@@ -36,12 +36,17 @@ export default function ViewModal({
     if (tempAmount !== null) {
       setLoadingIndex(index);
       try {
+        const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
         const response = await fetch(
           "https://baakipinnetharam.onrender.com/update-entry",
           {
             method: "POST",
             credentials: "include",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+            },
             body: JSON.stringify({
               name: modalData[index].name,
               amount: tempAmount,
@@ -70,17 +75,24 @@ export default function ViewModal({
       setLoadingIndex(null);
     }
   };
+
   const getgpayid = async (uid: string) => {
     try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
       const response = await fetch(
         "https://baakipinnetharam.onrender.com/getgpayid",
         {
           method: "POST",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
           body: JSON.stringify({ uid }),
         }
       );
+
       if (response.ok) {
         const data = await response.json();
         return data.gpayId;
@@ -91,15 +103,21 @@ export default function ViewModal({
       return null;
     }
   };
+
   const handleDelete = async (index: number) => {
     setLoadingIndex(index);
     try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
       const response = await fetch(
         "https://baakipinnetharam.onrender.com/delete-entry",
         {
           method: "DELETE",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
           body: JSON.stringify({ name: modalData[index].name }),
         }
       );
@@ -116,6 +134,7 @@ export default function ViewModal({
     }
     setLoadingIndex(null);
   };
+
   const handlePayNow = async (index: number, item: any) => {
     setLoadingIndex(index);
     try {

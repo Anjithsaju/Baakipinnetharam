@@ -47,7 +47,6 @@ export default function AuthPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify(requestData),
       });
 
@@ -57,18 +56,18 @@ export default function AuthPage() {
         throw new Error(result.message || "Authentication failed.");
       }
 
-      //alert(result.message);
+      // Store the JWT token in localStorage
+      localStorage.setItem("jwtToken", result.token);
+
       setIsLoggedIn(true);
       reset();
       router.push("/main");
     } catch (err: any) {
       setError(err.message || "Authentication failed.");
-      //alert(err.message || "Authentication failed.");
     } finally {
       setLoading(false);
     }
   };
-
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -86,9 +85,32 @@ export default function AuthPage() {
 
   useEffect(() => {
     async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (isLoggedIn) {
-        router.push("/main");
+      const token = localStorage.getItem("jwtToken");
+      console.log("Token:", token);
+
+      if (token) {
+        try {
+          const response = await fetch(
+            "https://baakipinnetharam.onrender.com/verify-token",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            setIsLoggedIn(true);
+            router.push("/main");
+          } else {
+            localStorage.removeItem("jwtToken");
+          }
+        } catch (err) {
+          console.error("Error verifying token:", err);
+          localStorage.removeItem("jwtToken");
+        }
       }
     }
     check();

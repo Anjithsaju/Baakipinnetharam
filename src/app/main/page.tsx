@@ -28,6 +28,55 @@ interface Person {
 export default function Home() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error message
+
+  useEffect(() => {
+    async function check() {
+      const token = localStorage.getItem("jwtToken");
+      console.log("Token:", token);
+
+      if (token) {
+        try {
+          const response = await fetch(
+            "https://baakipinnetharam.onrender.com/verify-token",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            setErrorMessage(
+              errorData.message || "Session expired. Please log in again."
+            ); // Set error message
+            setTimeout(() => {
+              router.push("/");
+              localStorage.removeItem("jwtToken");
+            }, 3000); // Redirect after 3 seconds
+          }
+        } catch (err) {
+          console.error("Error verifying token:", err);
+          setErrorMessage(
+            "An error occurred while verifying your session. Please log in again."
+          );
+          setTimeout(() => {
+            router.push("/");
+            localStorage.removeItem("jwtToken");
+          }, 3000); // Redirect after 3 seconds
+        }
+      } else {
+        setErrorMessage("onnu podo apa. Login cheyyu.");
+        setTimeout(() => {
+          router.push("/");
+        }, 3000); // Redirect after 3 seconds
+      }
+    }
+    check();
+  }, []);
 
   const [show, setShow] = useState(false);
 
@@ -41,13 +90,23 @@ export default function Home() {
   const [people, setPeople] = useState<Person[]>([]);
 
   const [refreshKey, setRefreshKey] = useState(0);
-
   const fetchData = () => {
+    const token = localStorage.getItem("jwtToken"); // Retrieve the token from localStorage
+
     fetch("https://baakipinnetharam.onrender.com/UserData", {
       method: "GET",
       credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+      },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+        return res.json();
+      })
       .then((data) => {
         const formattedDues: DebtDueType[] = Object.entries(data.due).map(
           ([name, amount], index) => ({
@@ -92,13 +151,10 @@ export default function Home() {
   };
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "https://baakipinnetharam.onrender.com/logout",
-        {},
-        { withCredentials: true }
-      );
-      console.log("Logout successful!");
+      const token = localStorage.getItem("jwtToken");
 
+      localStorage.removeItem("jwtToken"); // Remove the token from localStorage
+      console.log("Logout successful!");
       router.push("/login");
     } catch (err: any) {
       console.error("Logout failed.", err);
@@ -110,19 +166,20 @@ export default function Home() {
     (sum, item) => sum + item.amount,
     0
   );
-  useEffect(() => {
-    async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (!isLoggedIn) {
-        router.push("/");
-      } else {
-        setChecking(false);
-      }
-    }
-
-    check();
-  }, []);
-
+  if (errorMessage) {
+    return (
+      <div
+        style={{ background: "linear-gradient(62deg, black, #00206b)" }}
+        className="flex items-center justify-center min-h-screen bg-gray-100"
+      >
+        <div className="bg-white p-6 rounded shadow-md text-center">
+          <h2 className="text-red-500 font-bold text-lg">Error</h2>
+          <p className="text-gray-700 mt-2">{errorMessage}</p>
+          <p className="text-gray-500 mt-4">Redirecting to the login page...</p>
+        </div>
+      </div>
+    );
+  }
   //if (checking) return <p>Checking session...</p>;
   return (
     <div

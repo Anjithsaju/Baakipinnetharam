@@ -38,6 +38,8 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
           };
 
     try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token from localStorage
+
       const response = await fetch(
         "https://baakipinnetharam.onrender.com/api/add-entry",
         {
@@ -45,6 +47,7 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
           },
           body: JSON.stringify(payload),
         }

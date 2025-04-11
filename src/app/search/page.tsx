@@ -24,9 +24,16 @@ export default function FindFriends() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
       const response = await axios.get(
         `https://baakipinnetharam.onrender.com/users?search=${search}`,
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          withCredentials: true,
+        }
       );
       setUsers(response.data);
       setError(null);
@@ -38,24 +45,19 @@ export default function FindFriends() {
     }
   };
 
-  // const fetchFriendRequests = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       "https://baakipinnetharam.onrender.com/friend-requests",
-  //       { withCredentials: true }
-  //     );
-  //     setFriendRequests(response.data);
-  //   } catch (err) {
-  //     toast.error("Failed to fetch friend requests");
-  //   }
-  // };
-
   const sendFriendRequest = async (userId: string) => {
+    const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
     const promise = toast.promise(
       axios.post(
         "https://baakipinnetharam.onrender.com/friend-request",
         { userId },
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          withCredentials: true,
+        }
       ),
       {
         loading: "Sending request...",
@@ -67,14 +69,20 @@ export default function FindFriends() {
   };
 
   const respondToRequest = async (requestId: string, action: string) => {
+    const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
     try {
       await axios.post(
         "https://baakipinnetharam.onrender.com/respond-request",
         { requestId, action },
-        { withCredentials: true }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          withCredentials: true,
+        }
       );
       toast.success(`Friend request ${action}ed`);
-      // fetchFriendRequests();
     } catch {
       toast.error("Failed to respond to request");
     }
@@ -86,22 +94,18 @@ export default function FindFriends() {
   }, [search]);
 
   // useEffect(() => {
-  //   fetchFriendRequests();
+  //   async function check() {
+  //     const isLoggedIn = await isUserInSession();
+  //     if (!isLoggedIn) {
+  //       router.push("/");
+  //     } else {
+  //       setChecking(false);
+  //     }
+  //   }
+
+  //   check();
   // }, []);
-  useEffect(() => {
-    async function check() {
-      const isLoggedIn = await isUserInSession();
-      if (!isLoggedIn) {
-        router.push("/");
-      } else {
-        setChecking(false);
-      }
-    }
 
-    check();
-  }, []);
-
-  //if (checking) return <p>Checking session...</p>;
   return (
     <div
       style={{ background: "linear-gradient(62deg, black, #00206b)" }}
