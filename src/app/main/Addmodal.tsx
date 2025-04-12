@@ -17,6 +17,7 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
   } | null>(null);
   const [addType, setAddType] = useState("");
   const [selectedPerson, setSelectedPerson] = useState("");
+  const [Description, setDescription] = useState("");
   const [transactionName, setTransactionName] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,7 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
             type: "debt_due",
             person: selectedPerson,
             amount: parseFloat(amount),
+            desc: Description,
           };
 
     try {
@@ -174,6 +176,13 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
               placeholder="Amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              className="border p-2 w-full mb-2"
+            />
+            <input
+              type="text"
+              placeholder="Description"
+              value={Description}
+              onChange={(e) => setDescription(e.target.value)}
               className="border p-2 w-full mb-2"
             />
             <button

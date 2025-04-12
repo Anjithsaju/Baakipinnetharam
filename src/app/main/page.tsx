@@ -79,7 +79,10 @@ export default function Home() {
   }, []);
 
   const [show, setShow] = useState(false);
-
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+  } | null>(null);
   const [dues, setDues] = useState<DebtDueType[]>([]);
   const [debts, setDebts] = useState<DebtDueType[]>([]);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
@@ -88,7 +91,14 @@ export default function Home() {
   const [modalTitle, setModalTitle] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [people, setPeople] = useState<Person[]>([]);
-
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [transactionModalData, setTransactionModalData] = useState<
+    TransactionType[]
+  >([]);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [tempName, setTempName] = useState<string | null>(null);
+  const [tempAmount, setTempAmount] = useState<number | null>(null);
+  const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const fetchData = () => {
     const token = localStorage.getItem("jwtToken"); // Retrieve the token from localStorage
@@ -166,6 +176,87 @@ export default function Home() {
     (sum, item) => sum + item.amount,
     0
   );
+  const handleSave = async (index: number) => {
+    if (tempName !== null && tempAmount !== null) {
+      setLoadingIndex(index);
+      try {
+        const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
+        const response = await fetch(
+          "https://baakipinnetharam.onrender.com/update-transaction",
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+            },
+            body: JSON.stringify({
+              transactionId: transactionModalData[index].formattedTime, // Unique ID of the transaction
+              name: tempName,
+              amount: tempAmount,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update transaction");
+        }
+
+        // Update the transaction in the modal and main list
+        const updatedData = [...transactionModalData];
+        updatedData[index].name = tempName;
+        updatedData[index].amount = tempAmount;
+        setTransactionModalData(updatedData);
+        setTransactions(updatedData);
+        setAlert({ type: "success", message: "Transaction updated." });
+        console.log(alert);
+        setEditIndex(null);
+        setTempName(null);
+        setTempAmount(null);
+      } catch (error) {
+        console.error("Error saving transaction:", error);
+        setAlert({ type: "error", message: "Failed to save transaction." });
+        //alert("Failed to save transaction. Please try again.");
+      } finally {
+        setLoadingIndex(null);
+      }
+    }
+  };
+  const handleDelete = async (index: number) => {
+    setLoadingIndex(index);
+    try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+      console.log(transactionModalData[index].formattedTime);
+      const response = await fetch(
+        "https://baakipinnetharam.onrender.com/delete-transaction",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          body: JSON.stringify({
+            transactionId: transactionModalData[index].formattedTime, // Unique ID of the transaction
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete transaction");
+      }
+
+      // Remove the transaction from the modal and main list
+      const updatedData = transactionModalData.filter((_, i) => i !== index);
+      setTransactionModalData(updatedData);
+      setTransactions(updatedData);
+      setAlert({ type: "success", message: "Transaction deleted." });
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      setAlert({ type: "error", message: "Failed to delete transaction." });
+    } finally {
+      setLoadingIndex(null);
+    }
+  };
   if (errorMessage) {
     return (
       <div
@@ -264,7 +355,13 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="w-full max-w-md h-[60%] bg-gray-300 rounded-lg text-black p-4 overflow-auto">
+      <div
+        className="w-full max-w-md h-[60%] bg-gray-300 rounded-lg text-black p-4 overflow-auto cursor-pointer"
+        onClick={() => {
+          setTransactionModalData(transactions); // Set modal data
+          setIsTransactionModalOpen(true); // Open modal
+        }}
+      >
         <h3 className="font-semibold text-lg relative">
           Transactions{" "}
           <span className="absolute right-4">₹{totalTransactions}</span>
@@ -318,6 +415,129 @@ export default function Home() {
           people={people}
         />
       )}
+
+      {isTransactionModalOpen && (
+        <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl   h-[90%]">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-black">
+                Edit Transactions
+              </h3>
+              <button
+                onClick={() => {
+                  setTransactionModalData([]); // Clear all transactions
+                  setTransactions([]); // Update main transactions
+                  setIsTransactionModalOpen(false); // Close modal
+                }}
+                className="text-red-500 font-bold"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="overflow-auto h-[85%]">
+              <ul className="space-y-4">
+                {transactionModalData.map((transaction, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-center bg-gray-100 p-3 rounded-lg"
+                  >
+                    <div className="text-black">
+                      {editIndex === index ? (
+                        <>
+                          <input
+                            type="text"
+                            value={
+                              tempName !== null ? tempName : transaction.name
+                            }
+                            onChange={(e) => setTempName(e.target.value)}
+                            className="border p-1 rounded w-40"
+                          />
+                          <input
+                            type="number"
+                            value={
+                              tempAmount !== null
+                                ? tempAmount
+                                : transaction.amount
+                            }
+                            onChange={(e) =>
+                              setTempAmount(parseFloat(e.target.value))
+                            }
+                            className="border p-1 rounded w-20 ml-2"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <span>{transaction.name}</span>:{" "}
+                          <span className="text-green-600">
+                            ₹{transaction.amount}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {editIndex === index ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setEditIndex(null);
+                              setTempName(null);
+                              setTempAmount(null);
+                            }}
+                            className="text-red-500 ml-2"
+                          >
+                            <i className="bx bx-x"></i>
+                          </button>
+                          <button
+                            onClick={() => handleSave(index)}
+                            className="bg-green-500 text-white px-2 py-1 rounded"
+                            disabled={loadingIndex === index}
+                          >
+                            {loadingIndex === index ? (
+                              "⏳"
+                            ) : (
+                              <i className="bx bx-check"></i>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditIndex(index);
+                            setTempName(transaction.name);
+                            setTempAmount(transaction.amount);
+                          }}
+                        >
+                          <i className="bx bx-edit-alt text-black"></i>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
+                        disabled={loadingIndex === index}
+                      >
+                        {loadingIndex === index ? (
+                          "⏳"
+                        ) : (
+                          <i className="bx bx-trash"></i>
+                        )}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setIsTransactionModalOpen(false)}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {alert && <Alert type={alert.type} message={alert.message} />}
     </div>
   );
 }
