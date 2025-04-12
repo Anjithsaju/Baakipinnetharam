@@ -23,6 +23,21 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
+    // Validation: Ensure required fields are filled
+    if (addType === "debt_due" && (!selectedPerson || !amount)) {
+      setAlert({
+        type: "error",
+        message: "Please fill in all required fields (Person and Amount).",
+      });
+      return;
+    }
+    if (addType === "transaction" && !amount) {
+      setAlert({
+        type: "error",
+        message: "Please fill in all required fields .",
+      });
+      return;
+    }
     setLoading(true); // Start loading
 
     const payload =
