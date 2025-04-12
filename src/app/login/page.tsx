@@ -139,7 +139,7 @@ export default function AuthPage() {
           })}
           type="email"
           placeholder="Email"
-          className="border p-2"
+          className="border p-2 text-white"
         />
         {errors.email && <p className="text-red-500">{errors.email.message}</p>}
 
@@ -154,7 +154,7 @@ export default function AuthPage() {
                 },
               })}
               placeholder="Username"
-              className="border p-2"
+              className="border p-2 text-white"
             />
             {errors.username && (
               <p className="text-red-500">{errors.username.message}</p>
@@ -169,7 +169,7 @@ export default function AuthPage() {
           })}
           type="password"
           placeholder="Password"
-          className="border p-2"
+          className="border p-2 text-white"
         />
         {errors.password && (
           <p className="text-red-500">{errors.password.message}</p>
