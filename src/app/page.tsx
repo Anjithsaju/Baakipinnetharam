@@ -118,7 +118,7 @@ export default function LandingPage() {
         <p>
           Created by{" "}
           <a
-            href="https://anjithsaju.github.io/Portfolio/"
+            href="https://anjithsaju.vercel.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-yellow-400 hover:underline"
