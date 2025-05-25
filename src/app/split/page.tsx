@@ -235,6 +235,7 @@ export default function Split() {
         <input
           type="file"
           accept="image/*"
+          capture="environment"
           className="mb-4 w-[50%]"
           onChange={(e) => {
             if (e.target.files && e.target.files[0]) {
