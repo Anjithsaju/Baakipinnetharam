@@ -4,6 +4,7 @@ import "boxicons/css/boxicons.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 export default function Split() {
+  const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([""]);
   const [modalGroupName, setModalGroupName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -21,6 +22,9 @@ export default function Split() {
     { uid: "2", name: "Person2", money: 0 },
     { uid: "3", name: "Person3", money: 0 },
   ]);
+  const [itemNames, setItemNames] = useState<string[]>(
+    Array.from({ length: 3 }, () => "")
+  );
 
   // Helper to recalculate all splits
   const recalculateSplits = (
@@ -53,7 +57,57 @@ export default function Split() {
   };
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [newMembers, setNewMembers] = useState("");
+  const handleExtractBill = async (file: File) => {
+    setLoading(true); // Start loading
+    const formData = new FormData();
+    formData.append("image", file);
 
+    try {
+      const res = await fetch(
+        "https://baakipinnetharam.onrender.com/extract-bill",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json();
+        alert("Error: " + err.error);
+        setLoading(false);
+        return;
+      }
+      const data = await res.json();
+      // data.items contains the structured items from the bill
+      console.log("Extracted items:", data.items);
+
+      // Fill the UI with extracted items
+      setGroups(
+        data.items.map(
+          (item: any, idx: number) => item.name || `Item ${idx + 1}`
+        )
+      );
+      setQuantities(data.items.map((item: any) => item.qty?.toString() || "1"));
+      setAmounts(
+        data.items.map((item: any) =>
+          (item.price && Number(item.price) !== 0
+            ? item.price
+            : item.amount && Number(item.amount) !== 0
+            ? item.amount
+            : ""
+          ).toString()
+        )
+      );
+      setSelectedPeople(data.items.map(() => [])); // Reset selected people for new items
+      setItemNames(
+        data.items.map(
+          (item: any, idx: number) => item.item || `Item ${idx + 1}`
+        )
+      );
+    } catch (err) {
+      alert("Failed to extract bill: " + (err as Error).message);
+    }
+    setLoading(false); // Stop loading
+  };
   // Handler to update members from modal
   const handleSaveMembers = () => {
     // Example: comma separated names
@@ -145,6 +199,14 @@ export default function Split() {
     setAmounts((prev) => [...prev, ""]);
     setModalGroupName("");
     setQuantities((prev) => [...prev, "1"]);
+    setItemNames((prev) => [...prev, ""]);
+  };
+
+  // Handler for item name change
+  const handleItemNameChange = (groupIdx: number, value: string) => {
+    setItemNames((prev) =>
+      prev.map((name, idx) => (idx === groupIdx ? value : name))
+    );
   };
 
   return (
@@ -168,6 +230,29 @@ export default function Split() {
           </button>
         </div>
       </div>
+      <div className="flex flex-row justify-between items-center mb-4">
+        <h5 className="mb-4">Upload Bill image:</h5>
+        <input
+          type="file"
+          accept="image/*"
+          className="mb-4 w-[50%]"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              handleExtractBill(e.target.files[0]);
+            }
+          }}
+        />
+      </div>
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-8 flex flex-col items-center shadow-lg">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <span className="text-lg text-black font-semibold">
+              Extracting bill, please wait...
+            </span>
+          </div>
+        </div>
+      )}
       {showMembersModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-40">
           <div className="bg-white rounded-xl p-8 w-full max-w-md text-black shadow-lg">
@@ -228,6 +313,10 @@ export default function Split() {
                   placeholder="Itemname"
                   aria-label="Itemname"
                   aria-describedby="addon-wrapping"
+                  value={itemNames[groupIdx] || ""}
+                  onChange={(e) =>
+                    handleItemNameChange(groupIdx, e.target.value)
+                  }
                 />
               </div>
               <div className="flex flex-row gap-1 ">
@@ -238,7 +327,7 @@ export default function Split() {
                   <input
                     type="number"
                     min={1}
-                    className=" form-control border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    className=" form-control border  px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     value={quantities[groupIdx]}
                     onChange={(e) =>
                       handleQuantityChange(groupIdx, e.target.value)
@@ -252,7 +341,7 @@ export default function Split() {
                   <input
                     type="number"
                     min={0}
-                    className=" form-control border rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    className=" form-control border  px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     value={amounts[groupIdx]}
                     onChange={(e) =>
                       handleAmountChange(groupIdx, e.target.value)
@@ -265,7 +354,7 @@ export default function Split() {
                   Split Between
                 </span>
                 <select
-                  className=" form-select border rounded px-3 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  className=" form-select border  px-3 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-pink-400"
                   value=""
                   onChange={(e) => handlePersonSelect(groupIdx, e)}
                 >
