@@ -2,11 +2,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
-import "boxicons/css/boxicons.min.css";
-
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import BillsPage from "./bills"; // Adjust the import path as necessary
+
 export default function Split() {
   type Group = {
     _id: string;
@@ -121,6 +118,10 @@ export default function Split() {
   const handleRemovePerson = (uid: string) => {
     setSelectedPeople(selectedPeople.filter((person) => person.uid !== uid));
   };
+  useEffect(() => {
+    // @ts-ignore
+    import("bootstrap/dist/js/bootstrap.bundle.min.js");
+  }, []);
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10 space-y-10">
       <div className="w-full max-w-xs flex justify-between items-center">
