@@ -49,27 +49,29 @@ export default function Split() {
 
     fetchPeople();
   }, []);
-  useEffect(() => {
-    const fetchUserGroups = async () => {
-      try {
-        const token = localStorage.getItem("jwtToken");
-        const res = await fetch(
-          "https://baakipinnetharam.onrender.com/my-groups",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await res.json();
-        if (data.success && Array.isArray(data.groups)) {
-          console.log("Fetched groups:", data.groups);
-          setGroups(data.groups);
+  // Move fetchUserGroups to component scope so it can be reused
+  const fetchUserGroups = async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const res = await fetch(
+        "https://baakipinnetharam.onrender.com/my-groups",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (err) {
-        console.error("Failed to fetch user groups:", err);
+      );
+      const data = await res.json();
+      if (data.success && Array.isArray(data.groups)) {
+        console.log("Fetched groups:", data.groups);
+        setGroups(data.groups);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch user groups:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchUserGroups();
   }, []);
 
@@ -103,7 +105,8 @@ export default function Split() {
       }
       setModalGroupName("");
       setSelectedPeople([]);
-      window.location.reload();
+      fetchUserGroups();
+      //window.location.reload();
     }
   };
   const handlePersonSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {

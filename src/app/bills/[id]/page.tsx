@@ -41,6 +41,70 @@ function getPersonTotals(bills: Bill[], members: Member[]) {
   });
   return Object.values(totals);
 }
+function getSettlements(balances: [string, number][]) {
+  // Clone and sort
+  const creditors = balances
+    .filter(([_, amt]) => amt > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const debtors = balances
+    .filter(([_, amt]) => amt < 0)
+    .sort((a, b) => a[1] - b[1]);
+  const settlements: { from: string; to: string; amount: number }[] = [];
+
+  let i = 0,
+    j = 0;
+  while (i < creditors.length && j < debtors.length) {
+    let [creditorName, creditorAmt] = creditors[i];
+    let [debtorName, debtorAmt] = debtors[j];
+
+    const settleAmt = Math.min(creditorAmt, -debtorAmt);
+
+    if (settleAmt > 0) {
+      settlements.push({
+        from: debtorName.replace(/"/g, "").trim(),
+        to: creditorName.replace(/"/g, "").trim(),
+        amount: settleAmt,
+      });
+      creditors[i][1] -= settleAmt;
+      debtors[j][1] += settleAmt;
+    }
+
+    if (Math.abs(creditors[i][1]) < 0.01) i++;
+    if (Math.abs(debtors[j][1]) < 0.01) j++;
+  }
+  return settlements;
+}
+function getTally(bills: Bill[], members: Member[]) {
+  const balances: Record<string, number> = {};
+  members.forEach((m) => (balances[m.name] = 0));
+
+  bills.forEach((bill) => {
+    // console.log("Processing bill:", bill);
+    var paidby = bill.paidBy;
+    var summary = bill.summary;
+    // console.log("Bill summary:", summary);
+    // console.log("Paid by:", paidby);
+    if (paidby && summary) {
+      summary.forEach((s: any) => {
+        if (s.uid && typeof s.money === "number") {
+          if (paidby !== undefined && balances[paidby] !== undefined) {
+            balances[paidby] += s.money;
+          }
+          if (s.name !== undefined && balances[s.name] !== undefined) {
+            balances[s.name] -= s.money;
+          }
+        }
+      });
+    }
+    // console.log("Current balances:", balances);
+  });
+
+  const sortedBalances = Object.entries(balances).sort(([, a], [, b]) => b - a);
+  // console.log("Sorted balances:", sortedBalances);
+  const settlements = getSettlements(sortedBalances);
+  // console.log("Settlements:", settlements);
+  return settlements;
+}
 
 export default function GroupDetailsPage() {
   const { id } = useParams();
@@ -54,6 +118,9 @@ export default function GroupDetailsPage() {
 
   // Summary modal state
   const [showSummary, setShowSummary] = useState(false);
+
+  // Tally modal state
+  const [showTally, setShowTally] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -92,15 +159,15 @@ export default function GroupDetailsPage() {
             {group.members.map((member) => member.name).join(", ")}
           </div>
         </div>
-        <div className="w-full  flex justify-around items-center">
+        <div className="w-full flex justify-around items-center">
           <button
-            className=" bg-blue-500 text-white font-semibold px-2 py-2 !rounded-full hover:bg-blue-400 transition duration-300 text-base shadow"
+            className="bg-blue-500 text-white font-semibold px-2 py-2 !rounded-full hover:bg-blue-400 transition duration-300 text-base shadow"
             onClick={() => setShowSummary(true)}
           >
             Show Expense Summary
           </button>
           <button
-            className=" bg-yellow-400 text-black font-semibold px-2 py-2 !rounded-full hover:bg-yellow-300 transition duration-300 text-base shadow"
+            className="bg-yellow-400 text-black font-semibold px-2 py-2 !rounded-full hover:bg-yellow-300 transition duration-300 text-base shadow"
             onClick={() => {
               router.push(`/bills/${id}/new-bill`);
             }}
@@ -137,7 +204,6 @@ export default function GroupDetailsPage() {
           </div>
         )}
       </div>
-
       {/* Bill Details Modal */}
       {showModal && selectedBill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -250,10 +316,9 @@ export default function GroupDetailsPage() {
           </div>
         </div>
       )}
-
       {showSummary && group && group.bills && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-8 w-full max-w-md text-black shadow-lg flex flex-col">
+          <div className="bg-white rounded-xl p-8 w-[90%] max-w-md text-black shadow-lg flex flex-col">
             <h2 className="text-xl font-bold mb-4">Expense Summary</h2>
             <table className="w-full text-sm mt-2 border">
               <thead>
@@ -265,15 +330,84 @@ export default function GroupDetailsPage() {
               <tbody>
                 {getPersonTotals(group.bills, group.members).map((person) => (
                   <tr key={person.name}>
-                    <td className="border p-1">{person.name}</td>
+                    <td className="border p-1">
+                      {person.name.replace(/"/g, "").trim()}
+                    </td>
                     <td className="border p-1">₹{person.total.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {/* Settlements Table */}
+            <h3 className="text-lg font-semibold mt-6 mb-2">Who Owes Whom</h3>
+            <table className="w-full text-sm border">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="p-1 border">From</th>
+                  <th className="p-1 border">To</th>
+                  <th className="p-1 border">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  // Calculate balances for settlements
+                  const totals = getPersonTotals(group.bills, group.members);
+
+                  const settlements = getTally(
+                    group.bills ?? [],
+                    group.members
+                  );
+                  return settlements.length > 0 ? (
+                    settlements.map((s, idx) => (
+                      <tr key={idx}>
+                        <td className="border p-1">{s.from}</td>
+                        <td className="border p-1">{s.to}</td>
+                        <td className="border p-1">₹{s.amount.toFixed(2)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="text-center border p-2">
+                        No one owes anything!
+                      </td>
+                    </tr>
+                  );
+                })()}
+              </tbody>
+            </table>
             <button
               className="mt-4 px-4 py-2 rounded bg-yellow-400 text-black font-semibold"
               onClick={() => setShowSummary(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showTally && group && group.bills && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-8 w-full max-w-md text-black shadow-lg flex flex-col max-h-[80%] overflow-auto">
+            <h2 className="text-xl font-bold mb-4">Tally (Who Owes Whom)</h2>
+            {/* <div className="text-sm">
+              {(() => {
+                const settlements = getTally(group.bills, group.members);
+                return settlements.length > 0 ? (
+                  settlements.map((s, idx) => (
+                    <div key={idx} className="mb-2">
+                      <span className="font-semibold">{s.from}</span> owes{" "}
+                      <span className="font-semibold">{s.to}</span>: ₹
+                      {s.amount.toFixed(2)}
+                    </div>
+                  ))
+                ) : (
+                  <div>No one owes anything!</div>
+                );
+              })()}
+            </div> */}
+            <button
+              className="mt-4 px-4 py-2 rounded bg-yellow-400 text-black font-semibold"
+              // onClick={() => }
             >
               Close
             </button>
