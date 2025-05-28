@@ -1,5 +1,6 @@
 "use client";
 import "boxicons/css/boxicons.min.css";
+
 import { useState, useEffect } from "react";
 import Addmodal from "./Addmodal";
 import { useRouter } from "next/navigation";
@@ -71,7 +72,7 @@ export default function Home() {
       } else {
         setErrorMessage("onnu podo apa. Login cheyyu.");
         setTimeout(() => {
-          router.push("/");
+          router.push("/login");
         }, 3000); // Redirect after 3 seconds
       }
     }
@@ -334,10 +335,22 @@ export default function Home() {
             <i className="bx bx-search"></i>
           </button>
           <button
+            // onClick={() => router.push("/messages")}
+            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+          >
+            <i className="bx  bx-extension"></i>
+          </button>
+          <button
             onClick={openAddModal}
             className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
           >
             <span className="text-black text-lg font-bold">+</span>
+          </button>
+          <button
+            onClick={() => router.push("/bills")}
+            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
+          >
+            <i className="bx  bx-wallet"></i>
           </button>
           <button
             onClick={() => router.push("/messages")}

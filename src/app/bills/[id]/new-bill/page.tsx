@@ -1,9 +1,11 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useParams } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import { useRouter } from "next/navigation";
 export default function Split() {
+  const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([""]);
   const [modalGroupName, setModalGroupName] = useState("");
@@ -25,6 +27,43 @@ export default function Split() {
   const [itemNames, setItemNames] = useState<string[]>(
     Array.from({ length: 3 }, () => "")
   );
+  const [showBillNameModal, setShowBillNameModal] = useState(false);
+  const [billName, setBillName] = useState("");
+  const [paidBy, setPaidBy] = useState(""); // <-- New state for "Paid By"
+
+  // Fetch group members on mount
+  useEffect(() => {
+    const fetchGroupMembers = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const res = await fetch(
+          `https://baakipinnetharam.onrender.com/bills/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (
+          data &&
+          data.groupdetails &&
+          Array.isArray(data.groupdetails.members)
+        ) {
+          setPeople(
+            data.groupdetails.members.map((m: any) => ({
+              uid: m.uid,
+              name: m.name,
+              money: 0,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Failed to fetch group members:", err);
+      }
+    };
+    if (id) fetchGroupMembers();
+  }, [id]);
 
   // Helper to recalculate all splits
   const recalculateSplits = (
@@ -208,9 +247,85 @@ export default function Split() {
       prev.map((name, idx) => (idx === groupIdx ? value : name))
     );
   };
+  const router = useRouter();
+  // Modified save handler
+  const handleSaveBill = () => {
+    setShowBillNameModal(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setLoading(true);
+    setShowBillNameModal(false);
+    try {
+      // Prepare the structured data
+      const items = groups.map((group, idx) => ({
+        itemName: itemNames[idx] || group || `Item ${idx + 1}`,
+        quantity: quantities[idx],
+        amount: amounts[idx],
+        splitBetween: selectedPeople[idx]
+          .map((uid) => {
+            const person = people.find((p) => p.uid === uid);
+            return person ? { uid: person.uid, name: person.name } : null;
+          })
+          .filter(Boolean),
+      }));
+
+      const summary = people.map((person) => ({
+        uid: person.uid,
+        name: person.name,
+        money: person.money,
+      }));
+      const total = items.reduce((sum, item) => {
+        const qty = parseFloat(item.quantity) || 1;
+        const amt = parseFloat(item.amount) || 0;
+        return sum + qty * amt;
+      }, 0);
+      const payload = {
+        groupId: id,
+        billName, // include bill name
+        items,
+        summary,
+        paidBy,
+        total,
+      };
+      console.log("Payload to save:", payload);
+      const token = localStorage.getItem("jwtToken");
+      const res = await fetch(
+        "https://baakipinnetharam.onrender.com/bills/save",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert("Error saving bill: " + err.error);
+        setLoading(false);
+        return;
+      }
+
+      router.back();
+      // Optionally, redirect or reset state here
+    } catch (err) {
+      alert("Failed to save bill: " + (err as Error).message);
+    }
+    setLoading(false);
+  };
+
+  // Add this computed variable inside your component, before the return:
+  const isAnyItemFilled = groups.some(
+    (_, idx) =>
+      (itemNames[idx] && itemNames[idx].trim() !== "") ||
+      (amounts[idx] && amounts[idx].trim() !== "")
+  );
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10">
+    <div className="min-h-screen w-full bg-gradient-to-br  from-black to-blue-900 text-white flex flex-col items-center px-6 py-10">
       <div className="w-full max-w-2xl flex justify-between items-center mb-8">
         <h2 className="text-3xl font-bold">#Bill</h2>
         <div className="flex gap-3">
@@ -220,13 +335,6 @@ export default function Split() {
             onClick={handleAddNewItem}
           >
             Add New Item
-          </button>
-          <button
-            type="button"
-            className="bg-yellow-400 text-black font-semibold p-2 !pl-3 !pr-3 !rounded-full hover:bg-yellow-300 transition duration-300 text-base shadow"
-            onClick={() => setShowMembersModal(true)}
-          >
-            Set Members
           </button>
         </div>
       </div>
@@ -266,32 +374,64 @@ export default function Split() {
           <div className="bg-white rounded-xl p-8 flex flex-col items-center shadow-lg">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
             <span className="text-lg text-black font-semibold">
-              Extracting bill, please wait...
+              Proccessing, please wait...
             </span>
           </div>
         </div>
       )}
-      {showMembersModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-40">
-          <div className="bg-white rounded-xl p-8 w-full max-w-md text-black shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Set Members</h2>
+
+      {/* Bill Name Modal */}
+      {showBillNameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-8 w-full max-w-sm text-black shadow-lg flex flex-col items-center">
+            <h2 className="text-xl font-bold mb-4">Enter Bill Name</h2>
             <input
               type="text"
               className="border rounded px-3 py-2 w-full mb-4"
-              placeholder="Comma separated names (e.g. Alice, Bob, Charlie)"
-              value={newMembers}
-              onChange={(e) => setNewMembers(e.target.value)}
-            />
-            <div className="flex justify-end gap-2">
+              placeholder="Bill Name"
+              value={billName}
+              onChange={(e) => setBillName(e.target.value)}
+              autoFocus
+            />{" "}
+            <div className="input-group flex-nowrap">
+              <span className="input-group-text" id="addon-wrapping">
+                Paid By
+              </span>
+              <select
+                className="form-select border px-3 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                value={paidBy}
+                onChange={(e) => setPaidBy(e.target.value)}
+              >
+                <option value="" disabled>
+                  Select person
+                </option>
+                {people.map((person) => (
+                  <option key={person.uid} value={person.uid}>
+                    {person.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {paidBy && (
+              <div className="mt-2 text-sm text-gray-700">
+                Selected: {people.find((p) => p.uid === paidBy)?.name}
+              </div>
+            )}
+            <div className="mt-3 flex justify-end gap-2 w-full">
               <button
                 className="px-4 py-2 rounded bg-gray-200"
-                onClick={() => setShowMembersModal(false)}
+                onClick={() => {
+                  setShowBillNameModal(false);
+                  setPaidBy("");
+                  setBillName("");
+                }}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 rounded bg-blue-500 text-white"
-                onClick={handleSaveMembers}
+                className="px-4 py-2 rounded bg-green-500 text-white"
+                onClick={handleConfirmSave}
+                disabled={!billName.trim() || loading || !paidBy}
               >
                 Save
               </button>
@@ -455,6 +595,13 @@ export default function Split() {
             ))}
           </div>
         </div>
+        <button
+          className="mt-8 bg-green-500 text-white font-semibold px-8 py-3 !rounded-full hover:bg-green-400 transition duration-300 text-lg shadow"
+          onClick={handleSaveBill}
+          disabled={loading || !isAnyItemFilled}
+        >
+          {loading ? "Saving..." : "Save Bill"}
+        </button>
       </div>
     </div>
   );
