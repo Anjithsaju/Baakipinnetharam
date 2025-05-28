@@ -141,7 +141,7 @@ export default function GroupDetailsPage() {
       {/* Bill Details Modal */}
       {showModal && selectedBill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-3 w-[90%] max-h-[70%] overflow-auto max-w-md text-black shadow-lg flex flex-col">
+          <div className="bg-white rounded-xl p-3 w-[90%] max-h-[80%] overflow-auto max-w-md text-black shadow-lg flex flex-col">
             <h2 className="text-xl font-bold mb-4">
               {selectedBill.name || "Untitled Bill"}
             </h2>
