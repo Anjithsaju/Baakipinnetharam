@@ -1,7 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-
+import { useAlert } from "../../AlertContext";
+import "boxicons/css/boxicons.min.css";
+import "bootstrap/dist/css/bootstrap.min.css";
+import Nav from "../../nav";
 type Member = { uid: string; name: string };
 
 type Bill = {
@@ -41,6 +44,7 @@ function getPersonTotals(bills: Bill[], members: Member[]) {
   });
   return Object.values(totals);
 }
+
 function getSettlements(balances: [string, number][]) {
   // Clone and sort
   const creditors = balances
@@ -111,63 +115,116 @@ export default function GroupDetailsPage() {
   const router = useRouter();
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "info";
+    message: string;
+    key?: number;
+  } | null>(null);
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
-
+  const [selectedBillname, setSelectedBillName] = useState<string>("");
   // Summary modal state
   const [showSummary, setShowSummary] = useState(false);
 
   // Tally modal state
   const [showTally, setShowTally] = useState(false);
+  // Move fetchGroup to component scope so it can be reused
+  const fetchGroup = async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const res = await fetch(
+        `https://baakipinnetharam.onrender.com/bills/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await res.json();
+      if (data && data.groupdetails) {
+        setGroup(data.groupdetails);
+      }
+    } catch (err) {
+      console.error("Failed to fetch group details:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { showAlert, hideAlert } = useAlert();
+
+  const handledeletebill = async () => {
+    showAlert({ status: "loading", message: "Processing..." });
+
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const res = await fetch(
+        "https://baakipinnetharam.onrender.com/delete-bill",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            billName: selectedBillname,
+            groupId: id,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (data.success) {
+        showAlert({
+          status: "success",
+          message: "Bill deleted successfully",
+        });
+        fetchGroup();
+      } else {
+        showAlert({
+          status: "error",
+          message: data.message,
+        });
+      }
+    } catch (error) {
+      showAlert({
+        status: "error",
+        message: "Failed to delete Bill",
+      });
+    } finally {
+      setSelectedBillName("");
+    }
+  };
 
   useEffect(() => {
-    const fetchGroup = async () => {
-      try {
-        const token = localStorage.getItem("jwtToken");
-        const res = await fetch(
-          `https://baakipinnetharam.onrender.com/bills/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await res.json();
-        if (data && data.groupdetails) {
-          setGroup(data.groupdetails);
-        }
-      } catch (err) {
-        console.error("Failed to fetch group details:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     if (id) fetchGroup();
   }, [id]);
-
-  if (loading) return <div className="text-white p-8">Loading...</div>;
-  if (!group) return <div className="text-white p-8">Group not found.</div>;
+  useEffect(() => {
+    // @ts-ignore
+    import("bootstrap/dist/js/bootstrap.bundle.min.js");
+  }, []);
 
   return (
-    <div className="min-h-screen h-[100vh]  overflow-hidden w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10">
+    <div className="min-h-screen h-[100vh]  overflow-hidden w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center  px-6 !pt-2 py-10">
+      <Nav />
       <div className="w-full max-w-md flex flex-col space-y-6 relative">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold mb-2">{group.groupName}</h2>
+          <h2 className="text-2xl font-bold mb-2">
+            {group?.groupName || "loading.."}
+          </h2>
           <div className="text-xs text-gray-200 ml-4">
-            {group.members.map((member) => member.name).join(", ")}
+            {group?.members.map((member) => member.name).join(", ")}
           </div>
         </div>
         <div className="w-full flex justify-around items-center">
           <button
-            className="bg-blue-500 text-white font-semibold px-2 py-2 !rounded-full hover:bg-blue-400 transition duration-300 text-base shadow"
+            className="bg-blue-500 text-white font-semibold px-3 py-1.5 !rounded-full hover:bg-blue-400 transition duration-300 text-base shadow"
             onClick={() => setShowSummary(true)}
           >
             Show Expense Summary
           </button>
           <button
-            className="bg-yellow-400 text-black font-semibold px-2 py-2 !rounded-full hover:bg-yellow-300 transition duration-300 text-base shadow"
+            className="bg-yellow-400 text-black font-semibold px-3 py-1.5 !rounded-full hover:bg-yellow-300 transition duration-300 text-base shadow"
             onClick={() => {
               router.push(`/bills/${id}/new-bill`);
             }}
@@ -176,23 +233,39 @@ export default function GroupDetailsPage() {
           </button>
         </div>
         <h3 className="text-xl font-semibold mb-2">Bills</h3>
-        {group.bills && group.bills.length === 0 ? (
+        {group && group.bills && group.bills.length === 0 ? (
           <div className="text-gray-300">No bills found.</div>
         ) : (
           <div className="flex flex-col gap-4  overflow-auto h-[70vh] pb-4">
-            {group.bills &&
+            {group &&
+              group.bills &&
               group.bills.map((bill, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-100 text-black px-4 py-3 rounded-lg shadow flex flex-col cursor-pointer hover:bg-yellow-100 transition"
+                  className="bg-gray-100 text-black px-4 py-3 rounded-lg shadow flex flex-col cursor-pointer  transition select-none"
                   onClick={() => {
                     setSelectedBill(bill);
                     setShowModal(true);
                   }}
                 >
-                  <span className="font-semibold text-lg">
-                    {bill.name || "Untitled Bill"}
-                  </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-lg">
+                      {bill.name || "Untitled Bill"}
+                    </span>
+                    <button
+                      //onClick={() => handleDelete(index)}
+                      className="btn btn-primary !text-black ml-2 !bg-transparent px-2 py-1 rounded !border-none"
+                      type="button"
+                      data-bs-toggle="modal"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent parent onClick
+                        setSelectedBillName(bill.addedAt ?? ""); // Set selected bill
+                      }}
+                      data-bs-target="#deleteModal"
+                    >
+                      <i className="bx bx-trash"></i>
+                    </button>
+                  </div>
                   <span className="text-sm text-gray-700">
                     Total: ₹{bill.total ?? 0}
                   </span>
@@ -414,6 +487,48 @@ export default function GroupDetailsPage() {
           </div>
         </div>
       )}
+      <div
+        className="modal fade !text-black"
+        id="deleteModal"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog  inset-0">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h1 className="modal-title fs-5" id="exampleModalLabel">
+                Delete Bill
+              </h1>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">Are you sure to delete this Bill?</div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  handledeletebill();
+                }}
+                data-bs-dismiss="modal"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

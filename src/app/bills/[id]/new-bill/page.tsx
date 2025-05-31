@@ -1,9 +1,12 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, act } from "react";
 import { useParams } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
+import { set } from "react-hook-form";
+import Nav from "../../../nav";
+
 export default function Split() {
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
@@ -30,6 +33,7 @@ export default function Split() {
   const [showBillNameModal, setShowBillNameModal] = useState(false);
   const [billName, setBillName] = useState("");
   const [paidBy, setPaidBy] = useState(""); // <-- New state for "Paid By"
+  const [activeTab, setActiveTab] = useState(0);
 
   // Fetch group members on mount
   useEffect(() => {
@@ -148,21 +152,6 @@ export default function Split() {
     setLoading(false); // Stop loading
   };
   // Handler to update members from modal
-  const handleSaveMembers = () => {
-    // Example: comma separated names
-    const names = newMembers
-      .split(",")
-      .map((n) => n.trim())
-      .filter((n) => n.length > 0);
-    setPeople(
-      names.map((name, idx) => ({
-        uid: (idx + 1).toString(),
-        name,
-        money: 0,
-      }))
-    );
-    setShowMembersModal(false);
-  };
 
   // Add person to selectedPeople for a specific group
   const handlePersonSelect = (
@@ -252,41 +241,54 @@ export default function Split() {
   const handleSaveBill = () => {
     setShowBillNameModal(true);
   };
-
+  const [total, setTotal] = useState("");
+  const [splitEvenly, setSplitEvenly] = useState(false);
+  const [customAmounts, setCustomAmounts] = useState<string[]>(
+    people.map(() => "")
+  );
   const handleConfirmSave = async () => {
     setLoading(true);
     setShowBillNameModal(false);
     try {
-      // Prepare the structured data
-      const items = groups.map((group, idx) => ({
-        itemName: itemNames[idx] || group || `Item ${idx + 1}`,
-        quantity: quantities[idx],
-        amount: amounts[idx],
-        splitBetween: selectedPeople[idx]
-          .map((uid) => {
-            const person = people.find((p) => p.uid === uid);
-            return person ? { uid: person.uid, name: person.name } : null;
-          })
-          .filter(Boolean),
-      }));
-
+      let items: any[] = [];
+      let totalValue = 0;
+      if (activeTab === 1 && !total) {
+        items = [];
+      } else if (activeTab === 0) {
+        // Prepare the structured data
+        items = groups.map((group, idx) => ({
+          itemName: itemNames[idx] || group || `Item ${idx + 1}`,
+          quantity: quantities[idx],
+          amount: amounts[idx],
+          splitBetween: selectedPeople[idx]
+            .map((uid) => {
+              const person = people.find((p) => p.uid === uid);
+              return person ? { uid: person.uid, name: person.name } : null;
+            })
+            .filter(Boolean),
+        }));
+      }
       const summary = people.map((person) => ({
         uid: person.uid,
         name: person.name,
         money: person.money,
       }));
-      const total = items.reduce((sum, item) => {
-        const qty = parseFloat(item.quantity) || 1;
-        const amt = parseFloat(item.amount) || 0;
-        return sum + qty * amt;
-      }, 0);
+      if (items && items.length > 0) {
+        totalValue = items.reduce((sum, item) => {
+          const qty = parseFloat(item.quantity) || 1;
+          const amt = parseFloat(item.amount) || 0;
+          return sum + qty * amt;
+        }, 0);
+      } else if (activeTab === 1) {
+        totalValue = parseFloat(total) || 0;
+      }
       const payload = {
         groupId: id,
         billName, // include bill name
         items,
         summary,
         paidBy,
-        total,
+        total: totalValue,
       };
       console.log("Payload to save:", payload);
       const token = localStorage.getItem("jwtToken");
@@ -324,51 +326,17 @@ export default function Split() {
       (amounts[idx] && amounts[idx].trim() !== "")
   );
 
+  const [summary, setSummary] = useState<
+    { uid: string; name: string; money: number }[]
+  >([]);
+  useEffect(() => {
+    setCustomAmounts(people.map(() => ""));
+    setSummary(people.map((p) => ({ uid: p.uid, name: p.name, money: 0 })));
+  }, [people]);
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br  from-black to-blue-900 text-white flex flex-col items-center px-6 py-10">
-      <div className="w-full max-w-2xl flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">#Bill</h2>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            className="bg-yellow-400 text-black font-semibold p-2 !pl-3 !pr-3 !rounded-full hover:bg-yellow-300 transition duration-300 text-base shadow"
-            onClick={handleAddNewItem}
-          >
-            Add New Item
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-row justify-between items-center mb-4">
-        <h5 className="">Upload Bill image:</h5>
-        <label className="flex cursor-pointer bg-gray-200 rounded px-1 py-1 text-black text-center mr-2">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                handleExtractBill(e.target.files[0]);
-              }
-            }}
-          />
-          Upload
-        </label>
-        {/* Take a picture */}
-        <label className="flex cursor-pointer bg-gray-200 rounded px-1 py-1 text-black text-center">
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                handleExtractBill(e.target.files[0]);
-              }
-            }}
-          />
-          Capture
-        </label>
-      </div>
+    <div className="min-h-screen w-full bg-gradient-to-br  from-black to-blue-900 text-white flex flex-col items-center px-6 !pt-2 py-10">
+      <Nav />
+
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="bg-white rounded-xl p-8 flex flex-col items-center shadow-lg">
@@ -440,138 +408,333 @@ export default function Split() {
         </div>
       )}
       <div className=" bg-gray-100 p-4 !pl-4 !pr-4 rounded-2xl w-full max-w-2xl flex flex-col space-y-8">
-        {groups.map((group, groupIdx) => (
+        <ul className="nav nav-tabs">
+          <li className="nav-item">
+            <a
+              className={`nav-link ${
+                activeTab === 0 ? "active" : ""
+              } !bg-gray-100`}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab(0);
+                setPeople((prev) => prev.map((p) => ({ ...p, money: 0 })));
+                setTotal("");
+                setSplitEvenly(false);
+              }}
+            >
+              Split Bill
+            </a>
+          </li>
+          <li className="nav-item">
+            <a
+              className={`nav-link ${
+                activeTab === 1 ? "active" : ""
+              } !bg-gray-100`}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab(1);
+                setPeople((prev) => prev.map((p) => ({ ...p, money: 0 })));
+                setTotal("");
+                setSplitEvenly(false);
+              }}
+            >
+              split Amount
+            </a>
+          </li>
+        </ul>
+        <div className="relative w-full overflow-hidden">
           <div
-            key={groupIdx}
-            className="bg-white text-black px-4 py-3 rounded-2xl shadow-lg flex flex-col items-center space-y-4"
+            className="flex transition-transform duration-500"
+            style={{ transform: `translateX(-${activeTab * 100}%)` }}
           >
-            <div className="w-full flex items-center justify-between mb-2">
-              <span className="text-lg font-bold text-gray-800">
-                {group || `Item ${groupIdx + 1}`}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">#{groupIdx + 1}</span>
-                <button
-                  className="ml-2 text-red-500 hover:text-red-700 rounded-full p-1 transition"
-                  title="Delete Item"
-                  onClick={() => handleDeleteItem(groupIdx)}
-                >
-                  <i className="bx bx-trash text-xl"></i>
-                </button>
-              </div>
-            </div>
-            <div className="w-full flex flex-col md:flex-row md:items-center gap-2">
-              <div className="input-group flex-nowrap">
-                <span className="input-group-text" id="addon-wrapping">
-                  Item Name
-                </span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Itemname"
-                  aria-label="Itemname"
-                  aria-describedby="addon-wrapping"
-                  value={itemNames[groupIdx] || ""}
-                  onChange={(e) =>
-                    handleItemNameChange(groupIdx, e.target.value)
-                  }
-                />
-              </div>
-              <div className="flex flex-row gap-1 ">
-                <div className="input-group flex-nowrap">
-                  <span className="input-group-text" id="addon-wrapping">
-                    Qty
-                  </span>
-                  <input
-                    type="number"
-                    min={1}
-                    className=" form-control border  px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                    value={quantities[groupIdx]}
-                    onChange={(e) =>
-                      handleQuantityChange(groupIdx, e.target.value)
-                    }
-                  />
+            {/* Section 1: Bill Entry */}
+            <div className="w-full flex-shrink-0">
+              {activeTab === 0 && (
+                <div className="flex flex-col space-y-8">
+                  <div className="flex text-black flex-row justify-center mt-2 items-center mb-2.5">
+                    <h5 className="mb-0">Upload Bill image:</h5>
+                    <label className="flex cursor-pointer bg-gray-200 rounded px-1 py-1 text-black text-center mr-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleExtractBill(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      Upload
+                    </label>
+                    {/* Take a picture */}
+                    <label className="flex cursor-pointer bg-gray-200 rounded px-1 py-1 text-black text-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleExtractBill(e.target.files[0]);
+                          }
+                        }}
+                      />
+                      Capture
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    className="bg-gray-200 text-black font-semibold p-2 mb-3 !pl-3 !pr-3 !rounded-full hover:bg-yellow-300 transition duration-300 text-base "
+                    onClick={handleAddNewItem}
+                  >
+                    Add New Item
+                  </button>
+                  {groups.map((group, groupIdx) => (
+                    <div
+                      key={groupIdx}
+                      className="bg-white text-black px-4 py-3 rounded-2xl  flex flex-col items-center space-y-4"
+                    >
+                      <div className="w-full flex items-center justify-between mb-2">
+                        <span className="text-lg font-bold text-gray-800">
+                          {group || `Item ${groupIdx + 1}`}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">
+                            #{groupIdx + 1}
+                          </span>
+                          <button
+                            className="ml-2 text-red-500 hover:text-red-700 rounded-full p-1 transition"
+                            title="Delete Item"
+                            onClick={() => handleDeleteItem(groupIdx)}
+                          >
+                            <i className="bx bx-trash text-xl"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="w-full flex flex-col md:flex-col md:items-stretch gap-2">
+                        <div className="input-group flex-nowrap">
+                          <span
+                            className="input-group-text"
+                            id="addon-wrapping"
+                          >
+                            Item Name
+                          </span>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Itemname"
+                            aria-label="Itemname"
+                            aria-describedby="addon-wrapping"
+                            value={itemNames[groupIdx] || ""}
+                            onChange={(e) =>
+                              handleItemNameChange(groupIdx, e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="flex flex-row gap-1 ">
+                          <div className="input-group flex-nowrap">
+                            <span
+                              className="input-group-text"
+                              id="addon-wrapping"
+                            >
+                              Qty
+                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              className=" form-control border  px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                              value={quantities[groupIdx]}
+                              onChange={(e) =>
+                                handleQuantityChange(groupIdx, e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="input-group flex-nowrap">
+                            <span
+                              className="input-group-text"
+                              id="addon-wrapping"
+                            >
+                              Amt
+                            </span>
+                            <input
+                              type="number"
+                              min={0}
+                              className=" form-control border  px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                              value={amounts[groupIdx]}
+                              onChange={(e) =>
+                                handleAmountChange(groupIdx, e.target.value)
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="input-group flex-nowrap">
+                          <span
+                            className="input-group-text"
+                            id="addon-wrapping"
+                          >
+                            Split Between
+                          </span>
+                          <select
+                            className=" form-select border  px-3 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                            value=""
+                            onChange={(e) => handlePersonSelect(groupIdx, e)}
+                          >
+                            <option value="" disabled>
+                              Select person
+                            </option>
+                            {people
+                              .filter(
+                                (person) =>
+                                  !selectedPeople[groupIdx]?.includes(
+                                    person.uid
+                                  )
+                              )
+                              .map((person) => (
+                                <option key={person.uid} value={person.uid}>
+                                  {person.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Show selected people as chips */}
+                        <div className="flex flex-wrap gap-2">
+                          {selectedPeople[groupIdx] &&
+                          selectedPeople[groupIdx].length > 0 ? (
+                            selectedPeople[groupIdx].map((uid) => {
+                              const person = people.find((p) => p.uid === uid);
+                              return (
+                                <span
+                                  key={uid}
+                                  className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full flex items-center shadow"
+                                >
+                                  {person?.name}
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                    onClick={() =>
+                                      handleRemovePerson(groupIdx, uid)
+                                    }
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      cursor: "pointer",
+                                      fontSize: "1em",
+                                      lineHeight: 1,
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              );
+                            })
+                          ) : (
+                            <span className="text-gray-400 text-sm">
+                              No one selected
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* People summary */}
                 </div>
-                <div className="input-group flex-nowrap">
-                  <span className="input-group-text" id="addon-wrapping">
-                    Amt
-                  </span>
+              )}
+            </div>
+            {/* Section 2: Upload Bill */}
+            <div className="w-full flex-shrink-0">
+              {activeTab === 1 && (
+                <div className="flex flex-col space-y-8 text-black">
+                  <h2 className="text-lg font-bold mb-2">Enter Total Amount</h2>
+
                   <input
                     type="number"
                     min={0}
-                    className=" form-control border  px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                    value={amounts[groupIdx]}
-                    onChange={(e) =>
-                      handleAmountChange(groupIdx, e.target.value)
-                    }
+                    className="border rounded px-3 py-2 w-full mb-2"
+                    placeholder="Total Amount"
+                    onChange={(e) => {
+                      setTotal(e.target.value);
+                      if (splitEvenly) {
+                        setPeople((prev) => {
+                          const totalNumber = parseFloat(e.target.value) || 0;
+                          return prev.map((p) => ({
+                            ...p,
+                            money: totalNumber / prev.length,
+                          }));
+                        });
+                      }
+                    }}
                   />
-                </div>
-              </div>
-              <div className="input-group flex-nowrap">
-                <span className="input-group-text" id="addon-wrapping">
-                  Split Between
-                </span>
-                <select
-                  className=" form-select border  px-3 py-2 w-40 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  value=""
-                  onChange={(e) => handlePersonSelect(groupIdx, e)}
-                >
-                  <option value="" disabled>
-                    Select person
-                  </option>
-                  {people
-                    .filter(
-                      (person) =>
-                        !selectedPeople[groupIdx]?.includes(person.uid)
-                    )
-                    .map((person) => (
-                      <option key={person.uid} value={person.uid}>
-                        {person.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              {/* Show selected people as chips */}
-              <div className="flex flex-wrap gap-2">
-                {selectedPeople[groupIdx] &&
-                selectedPeople[groupIdx].length > 0 ? (
-                  selectedPeople[groupIdx].map((uid) => {
-                    const person = people.find((p) => p.uid === uid);
-                    return (
-                      <span
-                        key={uid}
-                        className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full flex items-center shadow"
-                      >
-                        {person?.name}
-                        <button
-                          type="button"
-                          className="ml-2 text-red-500 hover:text-red-700"
-                          onClick={() => handleRemovePerson(groupIdx, uid)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: "1em",
-                            lineHeight: 1,
-                          }}
-                        >
-                          ×
-                        </button>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="splitEvenly" className="cursor-pointer">
+                      Split Evenly
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="splitEvenly"
+                      checked={splitEvenly}
+                      onChange={() => {
+                        setSplitEvenly(!splitEvenly);
+                        if (!splitEvenly) {
+                          setPeople((prev) => {
+                            const totalNumber = parseFloat(total) || 0;
+                            return prev.map((p) => ({
+                              ...p,
+                              money: totalNumber / prev.length,
+                            }));
+                          });
+                        } else {
+                          setPeople((prev) =>
+                            prev.map((p) => ({ ...p, money: 0 }))
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </div>
+
+                  {!splitEvenly && (
+                    <div className="flex flex-col gap-2">
+                      <span className="font-semibold mb-1">
+                        Enter amount for each person:
                       </span>
-                    );
-                  })
-                ) : (
-                  <span className="text-gray-400 text-sm">No one selected</span>
-                )}
-              </div>
+                      {people.map((person, idx) => (
+                        <div
+                          key={person.uid}
+                          className="flex items-center gap-2"
+                        >
+                          <span className="w-32">{person.name}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            className="border rounded px-2 py-1 w-32"
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setPeople((prev) =>
+                                prev.map((p) =>
+                                  p.uid === person.uid
+                                    ? { ...p, money: parseFloat(value) || 0 }
+                                    : p
+                                )
+                              );
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        ))}
+        </div>
 
-        {/* People summary */}
         <div className="bg-white/90 rounded-2xl shadow-lg px-8 py-6  flex flex-col items-center">
           <h3 className="text-2xl font-bold !text-gray-900 mb-4">Summary</h3>
           <div className="flex flex-row flex-wrap gap-3 justify-center w-full">
@@ -595,10 +758,15 @@ export default function Split() {
             ))}
           </div>
         </div>
+
         <button
           className="mt-8 bg-green-500 text-white font-semibold px-8 py-3 !rounded-full hover:bg-green-400 transition duration-300 text-lg shadow"
           onClick={handleSaveBill}
-          disabled={loading || !isAnyItemFilled}
+          disabled={
+            loading ||
+            (!isAnyItemFilled && activeTab === 0) ||
+            (activeTab === 1 && !total)
+          }
         >
           {loading ? "Saving..." : "Save Bill"}
         </button>

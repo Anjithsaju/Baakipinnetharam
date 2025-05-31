@@ -320,7 +320,7 @@ export default function Split() {
                 </button>
               </div>
             </div>
-            <div className="w-full flex flex-col md:flex-row md:items-center gap-2">
+            <div className="w-full flex flex-col md:flex-col md:items-stretch gap-2">
               <div className="input-group flex-nowrap">
                 <span className="input-group-text" id="addon-wrapping">
                   Item Name

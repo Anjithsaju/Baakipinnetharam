@@ -17,9 +17,11 @@ export default function Alert({
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    setVisible(true);
+    console.log("hiii"); // Reset visible when message/type changes
     const timer = setTimeout(() => setVisible(false), duration);
     return () => clearTimeout(timer);
-  }, [duration]);
+  }, [message, type, duration]);
 
   if (!visible) return null;
 
