@@ -1,14 +1,22 @@
 "use client";
-import { useState, useRef, useEffect, act } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  act,
+  ChangeEventHandler,
+  ChangeEvent,
+} from "react";
 import { useParams } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
 import { set } from "react-hook-form";
 import Nav from "../../../nav";
-
+import { useAlert } from "../../../AlertContext";
 export default function Split() {
   const { id } = useParams();
+  const { showAlert, hideAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([""]);
   const [modalGroupName, setModalGroupName] = useState("");
@@ -23,6 +31,11 @@ export default function Split() {
     Array.from({ length: 3 }, () => "1")
   );
   const [people, setPeople] = useState([
+    { uid: "1", name: "Person1", money: 0 },
+    { uid: "2", name: "Person2", money: 0 },
+    { uid: "3", name: "Person3", money: 0 },
+  ]);
+  const [custompeople, setcustomPeople] = useState([
     { uid: "1", name: "Person1", money: 0 },
     { uid: "2", name: "Person2", money: 0 },
     { uid: "3", name: "Person3", money: 0 },
@@ -55,6 +68,13 @@ export default function Split() {
           Array.isArray(data.groupdetails.members)
         ) {
           setPeople(
+            data.groupdetails.members.map((m: any) => ({
+              uid: m.uid,
+              name: m.name,
+              money: 0,
+            }))
+          );
+          setcustomPeople(
             data.groupdetails.members.map((m: any) => ({
               uid: m.uid,
               name: m.name,
@@ -325,7 +345,7 @@ export default function Split() {
       (itemNames[idx] && itemNames[idx].trim() !== "") ||
       (amounts[idx] && amounts[idx].trim() !== "")
   );
-
+  const [changedUids, setChangedUids] = useState<string[]>([]);
   const [summary, setSummary] = useState<
     { uid: string; name: string; money: number }[]
   >([]);
@@ -333,6 +353,68 @@ export default function Split() {
     setCustomAmounts(people.map(() => ""));
     setSummary(people.map((p) => ({ uid: p.uid, name: p.name, money: 0 })));
   }, [people]);
+  const handlevaluechange = (
+    person: { uid: string; name: string; money: number },
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    let value = e.target.value;
+    let numValue = parseFloat(value) || 0;
+    const max = parseFloat(total) || 0;
+
+    // Clamp the value to max
+    if (numValue > max) {
+      numValue = max;
+      value = max.toString();
+    }
+
+    // Compute the new changedUids array
+    setChangedUids((prev) => {
+      const newChangedUids = prev.includes(person.uid)
+        ? prev
+        : [...prev, person.uid];
+
+      // Calculate the sum of all changed people, using the new value for the current person
+      const changedSum = people.reduce((acc, p) => {
+        if (p.uid === person.uid) {
+          return acc + numValue;
+        }
+        if (newChangedUids.includes(p.uid)) {
+          return acc + p.money;
+        }
+        return acc;
+      }, 0);
+
+      const balance = (parseFloat(total) || 0) - changedSum;
+      if (balance < 0) {
+        showAlert({
+          status: "error",
+          message:
+            "Total amount cannot be less than the sum of individual contributions.",
+        });
+        return prev; // Do not update if balance is negative
+      }
+
+      const remainingCount = people.length - newChangedUids.length;
+
+      setPeople((prevPeople) =>
+        prevPeople.map((p) => {
+          if (p.uid === person.uid) {
+            return { ...p, money: numValue };
+          }
+          if (!newChangedUids.includes(p.uid)) {
+            return {
+              ...p,
+              money: remainingCount > 0 ? balance / remainingCount : 0,
+            };
+          }
+          return p;
+        })
+      );
+
+      return newChangedUids;
+    });
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br  from-black to-blue-900 text-white flex flex-col items-center px-6 !pt-2 py-10">
       <Nav />
@@ -690,9 +772,16 @@ export default function Split() {
                             }));
                           });
                         } else {
-                          setPeople((prev) =>
-                            prev.map((p) => ({ ...p, money: 0 }))
-                          );
+                          // setPeople((prev) =>
+                          //   prev.map((p) => ({ ...p, money: 0 }))
+                          // );
+                          setPeople((prev) => {
+                            const totalNumber = parseFloat(total) || 0;
+                            return prev.map((p) => ({
+                              ...p,
+                              money: totalNumber / prev.length,
+                            }));
+                          });
                         }
                         return null;
                       }}
@@ -713,17 +802,45 @@ export default function Split() {
                           <input
                             type="number"
                             min={0}
+                            max={parseFloat(total) || 0}
+                            value={person.money === 0 ? "" : person.money}
                             className="border rounded px-2 py-1 w-32"
+                            // onChange={(e) => {
+                            //   setcustomPeople((prev) =>
+                            //     prev.map((p) =>
+                            //       p.uid === person.uid
+                            //         ? {
+                            //             ...p,
+                            //             money: parseFloat(e.target.value) || 0,
+                            //           }
+                            //         : p
+                            //     )
+                            //   );
+                            //   console.log(
+                            //     "Custom people updated:",
+                            //     custompeople
+                            //   );
+
+                            //   const value = e.target.value;
+                            //   setPeople((prev) =>
+                            //     prev.map((p) =>
+                            //       p.uid === person.uid
+                            //         ? { ...p, money: parseFloat(value) || 0 }
+                            //         : p
+                            //     )
+                            //   );
+                            // }}
+
                             onChange={(e) => {
-                              const value = e.target.value;
-                              setPeople((prev) =>
-                                prev.map((p) =>
-                                  p.uid === person.uid
-                                    ? { ...p, money: parseFloat(value) || 0 }
-                                    : p
-                                )
-                              );
+                              handlevaluechange(person, e);
                             }}
+                            // setPeople((prev) => {
+                            //   const totalNumber = total;
+                            //   return prev.map((p) => ({
+                            //     ...p,
+                            //     money: totalNumber / prev.length,
+                            //   }));
+                            // });
                           />
                         </div>
                       ))}
