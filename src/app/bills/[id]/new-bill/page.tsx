@@ -407,7 +407,7 @@ export default function Split() {
           </div>
         </div>
       )}
-      <div className=" bg-gray-100 p-4 !pl-4 !pr-4 rounded-2xl w-full max-w-2xl flex flex-col space-y-8">
+      <div className=" bg-gray-100 p-4 !pl-4 !pr-4 rounded-2xl w-full max-w-2xl flex flex-col space-y-4">
         <ul className="nav nav-tabs">
           <li className="nav-item">
             <a
@@ -735,7 +735,7 @@ export default function Split() {
           </div>
         </div>
 
-        <div className="bg-white/90 rounded-2xl shadow-lg px-8 py-6  flex flex-col items-center">
+        <div className="bg-white/90 rounded-2xl shadow-lg px-3 py-3  flex flex-col items-center">
           <h3 className="text-2xl font-bold !text-gray-900 mb-4">Summary</h3>
           <div className="flex flex-row flex-wrap gap-3 justify-center w-full">
             {people.map((person) => (

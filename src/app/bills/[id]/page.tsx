@@ -493,7 +493,7 @@ export default function GroupDetailsPage() {
         aria-labelledby="exampleModalLabel"
         aria-hidden="true"
       >
-        <div className="modal-dialog  inset-0">
+        <div className="modal-dialog  top-[30%]">
           <div className="modal-content">
             <div className="modal-header">
               <h1 className="modal-title fs-5" id="exampleModalLabel">
