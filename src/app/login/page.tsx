@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { isUserInSession } from "../session";
-
 interface AuthForm {
   email: string;
   username?: string;
@@ -117,110 +116,114 @@ export default function AuthPage() {
   }, []);
 
   return (
-    <div
-      style={{ background: "linear-gradient(62deg, black, #00206b)" }}
-      className="flex flex-col items-center justify-center min-h-screen"
-    >
-      <h2 className="text-2xl font-bold text-white">
-        {isLoggedIn ? "Welcome!" : isSignUp ? "Sign Up" : "Login"}
-      </h2>
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4 mt-4  p-6 rounded shadow-md w-[300px]"
+    <>
+      <div
+        style={{ background: "linear-gradient(62deg, black, #00206b)" }}
+        className="flex flex-col items-center justify-center min-h-screen"
       >
-        <input
-          {...register("email", {
-            required: "Email is required",
-            pattern: {
-              value: /^\S+@\S+\.\S+$/,
-              message: "Invalid email format",
-            },
-          })}
-          type="email"
-          placeholder="Email"
-          className="border p-2 text-white"
-        />
-        {errors.email && <p className="text-red-500">{errors.email.message}</p>}
+        <h2 className="text-2xl font-bold text-white">
+          {isLoggedIn ? "Welcome!" : isSignUp ? "Sign Up" : "Login"}
+        </h2>
 
-        {isSignUp && (
-          <>
-            <input
-              {...register("username", {
-                required: "Username is required",
-                minLength: {
-                  value: 3,
-                  message: "Username must be at least 3 characters",
-                },
-              })}
-              placeholder="Username"
-              className="border p-2 text-white"
-            />
-            {errors.username && (
-              <p className="text-red-500">{errors.username.message}</p>
-            )}
-          </>
-        )}
-
-        <input
-          {...register("password", {
-            required: "Password is required",
-            minLength: { value: 6, message: "Minimum length is 6" },
-          })}
-          type="password"
-          placeholder="Password"
-          className="border p-2 text-white"
-        />
-        {errors.password && (
-          <p className="text-red-500">{errors.password.message}</p>
-        )}
-
-        <button
-          type="submit"
-          className="bg-blue-500 text-white p-2 rounded flex items-center justify-center gap-2"
-          disabled={loading}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-4 mt-4  p-6 rounded shadow-md w-[300px]"
         >
-          {loading ? (
-            <>
-              <svg
-                className="animate-spin h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.372 0 0 5.372 0 12h4z"
-                ></path>
-              </svg>
-              <span>Loading...</span>
-            </>
-          ) : (
-            <span>{isSignUp ? "Sign Up" : "Login"}</span>
+          <input
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^\S+@\S+\.\S+$/,
+                message: "Invalid email format",
+              },
+            })}
+            type="email"
+            placeholder="Email"
+            className="border p-2 text-white"
+          />
+          {errors.email && (
+            <p className="text-red-500">{errors.email.message}</p>
           )}
-        </button>
-      </form>
 
-      {!isLoggedIn && (
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="text-blue-300 mt-4 underline"
-        >
-          {isSignUp
-            ? "Already have an account? Login"
-            : "Don't have an account? Sign Up"}
-        </button>
-      )}
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-    </div>
+          {isSignUp && (
+            <>
+              <input
+                {...register("username", {
+                  required: "Username is required",
+                  minLength: {
+                    value: 3,
+                    message: "Username must be at least 3 characters",
+                  },
+                })}
+                placeholder="Username"
+                className="border p-2 text-white"
+              />
+              {errors.username && (
+                <p className="text-red-500">{errors.username.message}</p>
+              )}
+            </>
+          )}
+
+          <input
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 6, message: "Minimum length is 6" },
+            })}
+            type="password"
+            placeholder="Password"
+            className="border p-2 text-white"
+          />
+          {errors.password && (
+            <p className="text-red-500">{errors.password.message}</p>
+          )}
+
+          <button
+            type="submit"
+            className="bg-blue-500 text-white p-2 rounded flex items-center justify-center gap-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.372 0 0 5.372 0 12h4z"
+                  ></path>
+                </svg>
+                <span>Loading...</span>
+              </>
+            ) : (
+              <span>{isSignUp ? "Sign Up" : "Login"}</span>
+            )}
+          </button>
+        </form>
+
+        {!isLoggedIn && (
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="text-blue-300 mt-4 underline"
+          >
+            {isSignUp
+              ? "Already have an account? Login"
+              : "Don't have an account? Sign Up"}
+          </button>
+        )}
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+      </div>
+    </>
   );
 }

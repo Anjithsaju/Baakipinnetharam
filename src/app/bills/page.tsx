@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import Alert from "../alert";
 import { useAlert } from "../AlertContext";
 import Nav from "../nav";
@@ -28,6 +28,18 @@ export default function Split() {
   //   { uid: "2", name: "Person2" },
   //   { uid: "3", name: "Person3" },
   // ]);
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href =
+      "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
+    link.id = "bootstrap-css";
+    document.head.appendChild(link);
+
+    return () => {
+      document.getElementById("bootstrap-css")?.remove();
+    };
+  }, []);
   useEffect(() => {
     // Fetch people
     const fetchPeople = async () => {
@@ -181,11 +193,18 @@ export default function Split() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10 !pt-2 space-y-10">
       <Nav homePath="/main" icon="bx bx-home-alt" title="Baaki Pinne Tharam" />
-      <div className="w-full max-w-xs flex justify-between items-center">
-        <h2 className="text-2xl font-bold mr-4">Your Groups</h2>
+      <div className="w-full md:max-w-xl max-w-none  flex justify-between items-center">
+        <h2 className="text-2xl font-bold ">Your Groups</h2>
+
+        <button
+          onClick={() => router.push("/Instant")}
+          className="w-8 h-8 p-0 bg-gray-200 text-black !rounded-full flex items-center justify-center"
+        >
+          <i className="bxr bxs-thunder"></i>
+        </button>
         <button
           type="button"
-          className="bg-yellow-400 text-black font-semibold px-2 py-2 !rounded-full hover:bg-yellow-300 transition duration-300 text-sm"
+          className="bg-yellow-400 text-black font-semibold px-1 py-1 !rounded-full hover:bg-yellow-300 transition duration-300 text-sm"
           data-bs-toggle="modal"
           data-bs-target="#exampleModal"
         >

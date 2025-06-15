@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useParams } from "next/navigation";
 import "boxicons/css/boxicons.min.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+//import "bootstrap/dist/css/bootstrap.min.css";
 import { useRouter } from "next/navigation";
 import { set } from "react-hook-form";
 import Nav from "../../../nav";
@@ -47,7 +47,18 @@ export default function Split() {
   const [billName, setBillName] = useState("");
   const [paidBy, setPaidBy] = useState(""); // <-- New state for "Paid By"
   const [activeTab, setActiveTab] = useState(0);
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href =
+      "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css";
+    link.id = "bootstrap-css";
+    document.head.appendChild(link);
 
+    return () => {
+      document.getElementById("bootstrap-css")?.remove();
+    };
+  }, []);
   // Fetch group members on mount
   useEffect(() => {
     const fetchGroupMembers = async () => {

@@ -319,9 +319,8 @@ export default function Home() {
           )}
         </div>
       </div>
-
       <div className="relative flex justify-center items-center gap-2 w-full my-4 text-black">
-        <div className="bg-gray-300 rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+        <div className="bg-gray-300 text-black rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
           <button
             onClick={() => router.push("/history")}
             className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
@@ -338,7 +337,7 @@ export default function Home() {
             // onClick={() => router.push("/messages")}
             className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
           >
-            <i className="bx  bx-extension"></i>
+            {/* <i className="bx  bx-extension"></i>? */}?
           </button>
           <button
             onClick={openAddModal}
@@ -350,7 +349,7 @@ export default function Home() {
             onClick={() => router.push("/bills")}
             className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
           >
-            <i className="bx  bx-wallet"></i>
+            <i className="bxr  bxs-percentage"></i>
           </button>
           <button
             onClick={() => router.push("/messages")}
