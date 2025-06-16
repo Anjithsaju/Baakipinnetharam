@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
+import IconCircle from "./IconCircle";
 // Add Boxicons CDN for icons
 if (typeof window !== "undefined") {
   const link = document.createElement("link");
@@ -41,6 +41,7 @@ export default function Nav({
         >
           <i className={icon}></i>
         </button>
+        {/* <IconCircle className={icon} text="Home" onClick={handleClick} /> */}
         <h2 className="mb-0 font-semibold">{title}</h2>
       </div>
     </div>

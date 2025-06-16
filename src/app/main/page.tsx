@@ -1,6 +1,6 @@
 "use client";
 import "boxicons/css/boxicons.min.css";
-
+import IconCircle from "../IconCircle";
 import { useState, useEffect } from "react";
 import Addmodal from "./Addmodal";
 import { useRouter } from "next/navigation";
@@ -321,49 +321,58 @@ export default function Home() {
       </div>
       <div className="relative flex justify-center items-center gap-2 w-full my-4 text-black">
         <div className="bg-gray-300 text-black rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
-          <button
+          {/* History */}
+
+          <IconCircle
+            className="bx bx-history "
+            text="History"
             onClick={() => router.push("/history")}
-            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-          >
-            <i className="bx bx-history"></i>
-          </button>
-          <button
+          />
+
+          {/* Search */}
+
+          <IconCircle
+            className="bx bx-search "
+            text="Search"
             onClick={() => router.push("/search")}
-            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-          >
-            <i className="bx bx-search"></i>
-          </button>
-          <button
-            // onClick={() => router.push("/messages")}
-            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-          >
-            {/* <i className="bx  bx-extension"></i>? */}?
-          </button>
+          />
+
+          {/* Help */}
+
+          <IconCircle className="bx bx-help-circle " text="Help" />
+
+          {/* Add */}
+
           <button
             onClick={openAddModal}
-            className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center"
+            className="w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center"
           >
-            <span className="text-black text-lg font-bold">+</span>
+            <span className=" font-bold">+</span>
           </button>
-          <button
+
+          {/* Bills */}
+
+          <IconCircle
+            className="bx bxs-receipt "
+            text="Bills"
             onClick={() => router.push("/bills")}
-            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-          >
-            <i className="bxr  bxs-percentage"></i>
-          </button>
-          <button
+          />
+
+          {/* Messages */}
+
+          <IconCircle
+            className="bx bx-envelope "
+            text="Inbox"
             onClick={() => router.push("/messages")}
-            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-          >
-            <i className="bx bx-envelope"></i>
-          </button>
-          <button
-            // onClick={() => router.push("/profile")}
+          />
+
+          {/* Logout */}
+
+          <IconCircle
+            className="bx bx-log-out "
+            text="Profile"
             onClick={handleLogout}
-            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center"
-          >
-            <i className="bx bx-user"></i>
-          </button>
+          />
         </div>
       </div>
 

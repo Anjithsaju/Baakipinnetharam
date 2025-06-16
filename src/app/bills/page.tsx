@@ -5,6 +5,7 @@ import "boxicons/css/boxicons.min.css";
 //import "bootstrap/dist/css/bootstrap.min.css";
 import Alert from "../alert";
 import { useAlert } from "../AlertContext";
+import IconCircle from "../IconCircle";
 import Nav from "../nav";
 export default function Split() {
   type Group = {
@@ -193,15 +194,20 @@ export default function Split() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10 !pt-2 space-y-10">
       <Nav homePath="/main" icon="bx bx-home-alt" title="Baaki Pinne Tharam" />
-      <div className="w-full md:max-w-xl max-w-none  flex justify-between items-center">
+      <div className="w-full md:max-w-xl max-w-none !text-white  flex justify-between items-center">
         <h2 className="text-2xl font-bold ">Your Groups</h2>
 
-        <button
+        {/* <button
           onClick={() => router.push("/Instant")}
           className="w-8 h-8 p-0 bg-gray-200 text-black !rounded-full flex items-center justify-center"
         >
           <i className="bxr bxs-thunder"></i>
-        </button>
+        </button> */}
+        <IconCircle
+          className="bxr bxs-thunder"
+          text="Instant Bill"
+          onClick={() => router.push("/Instant")}
+        />
         <button
           type="button"
           className="bg-yellow-400 text-black font-semibold px-1 py-1 !rounded-full hover:bg-yellow-300 transition duration-300 text-sm"
