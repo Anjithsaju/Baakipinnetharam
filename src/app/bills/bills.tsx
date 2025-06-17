@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { useTheme } from "../Theme";
 
 type Bill = {
   id: string;
@@ -13,6 +14,8 @@ interface BillsPageProps {
 }
 
 export default function BillsPage({ bills }: BillsPageProps) {
+  const { theme, themeClass, toggleTheme } = useTheme();
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-black to-blue-900 text-white flex flex-col items-center px-6 py-10">
       <div className="w-full max-w-md flex flex-col space-y-6">
@@ -24,7 +27,7 @@ export default function BillsPage({ bills }: BillsPageProps) {
             {bills.map((bill) => (
               <div
                 key={bill.id}
-                className="bg-gray-100 text-black px-4 py-3 rounded-lg shadow flex flex-col"
+                className={`${themeClass}px-4 py-3 rounded-lg shadow flex flex-col`}
               >
                 <span className="font-semibold">{bill.name}</span>
                 <span className="text-sm text-gray-600">

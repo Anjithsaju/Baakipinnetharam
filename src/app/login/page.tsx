@@ -1,10 +1,19 @@
 "use client";
-
+import "./login.css";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { isUserInSession } from "../session";
+import { useTheme } from "../Theme";
+
+// Add this global declaration for window.google
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
+
 interface AuthForm {
   email: string;
   username?: string;
@@ -23,6 +32,7 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+  const { themeClass } = useTheme();
 
   const onSubmit = async (data: AuthForm) => {
     try {
@@ -54,7 +64,7 @@ export default function AuthPage() {
       if (!response.ok) {
         throw new Error(result.message || "Authentication failed.");
       }
-
+      console.log("Login successful:", result);
       // Store the JWT token in localStorage
       localStorage.setItem("jwtToken", result.token);
 
@@ -67,6 +77,7 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
+
   const handleLogout = async () => {
     try {
       await axios.post(
@@ -74,19 +85,77 @@ export default function AuthPage() {
         {},
         { withCredentials: true }
       );
-      console.log("Logout successful!");
       setIsLoggedIn(false);
       router.push("/login");
     } catch (err: any) {
       setError("Logout failed.");
     }
   };
+  const handleGoogleResponse = async (response: any) => {
+    try {
+      const credential = response.credential;
+      console.log("Google token:", credential);
+
+      // (Optional) decode the JWT
+      // const user = jwt_decode(credential);
+      // console.log("Decoded user:", user);
+      // Send to your backend
+      const res = await fetch(
+        "https://baakipinnetharam.onrender.com/google-login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: credential }),
+        }
+      );
+
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result.message);
+
+      localStorage.setItem("jwtToken", result.token1);
+      console.log("Login successful:", result.token1);
+      setIsLoggedIn(true);
+      router.push("/main");
+    } catch (err: any) {
+      console.error("Google login error:", err);
+      setError(err.message || "Google login failed.");
+    }
+  };
+
+  useEffect(() => {
+    // Load Google script
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id:
+            "402890799956-ccogmmeun8uqatndmmt0k3n0hhpm2gha.apps.googleusercontent.com", // ⬅️ Replace with your actual client ID
+          callback: handleGoogleResponse,
+        });
+
+        window.google.accounts.id.renderButton(
+          document.getElementById("googleSignInDiv"),
+          {
+            theme: "outline",
+            size: "large",
+            width: "100%",
+          }
+        );
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function check() {
       const token = localStorage.getItem("jwtToken");
-      console.log("Token:", token);
-
       if (token) {
         try {
           const response = await fetch(
@@ -107,7 +176,6 @@ export default function AuthPage() {
             localStorage.removeItem("jwtToken");
           }
         } catch (err) {
-          console.error("Error verifying token:", err);
           localStorage.removeItem("jwtToken");
         }
       }
@@ -116,37 +184,36 @@ export default function AuthPage() {
   }, []);
 
   return (
-    <>
-      <div
-        style={{ background: "linear-gradient(62deg, black, #00206b)" }}
-        className="flex flex-col items-center justify-center min-h-screen"
-      >
-        <h2 className="text-2xl font-bold text-white">
-          {isLoggedIn ? "Welcome!" : isSignUp ? "Sign Up" : "Login"}
-        </h2>
-
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col gap-4 mt-4  p-6 rounded shadow-md w-[300px]"
-        >
-          <input
-            {...register("email", {
-              required: "Email is required",
-              pattern: {
-                value: /^\S+@\S+\.\S+$/,
-                message: "Invalid email format",
-              },
-            })}
-            type="email"
-            placeholder="Email"
-            className="border p-2 text-white"
-          />
-          {errors.email && (
-            <p className="text-red-500">{errors.email.message}</p>
-          )}
+    <div
+      style={{ background: "linear-gradient(62deg, black, #00206b)" }}
+      className={`flex flex-col items-center justify-center min-h-screen ${themeClass}`}
+    >
+      <div className="form-container">
+        <p className="title">{isSignUp ? "Sign Up" : "Login"}</p>
+        <form onSubmit={handleSubmit(onSubmit)} className="form ">
+          <div className="input-group">
+            <label htmlFor="email">Email</label>
+            <input
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^\S+@\S+\.\S+$/,
+                  message: "Invalid email format",
+                },
+              })}
+              type="email"
+              id="email"
+              placeholder="Email"
+              className="border p-2"
+            />
+            {errors.email && (
+              <p className="text-red-500">{errors.email.message}</p>
+            )}
+          </div>
 
           {isSignUp && (
-            <>
+            <div className="input-group">
+              <label htmlFor="username">Username</label>
               <input
                 {...register("username", {
                   required: "Username is required",
@@ -155,56 +222,64 @@ export default function AuthPage() {
                     message: "Username must be at least 3 characters",
                   },
                 })}
+                id="username"
                 placeholder="Username"
-                className="border p-2 text-white"
+                className="border p-2"
               />
               {errors.username && (
                 <p className="text-red-500">{errors.username.message}</p>
               )}
-            </>
+            </div>
           )}
 
-          <input
-            {...register("password", {
-              required: "Password is required",
-              minLength: { value: 6, message: "Minimum length is 6" },
-            })}
-            type="password"
-            placeholder="Password"
-            className="border p-2 text-white"
-          />
-          {errors.password && (
-            <p className="text-red-500">{errors.password.message}</p>
-          )}
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <input
+              {...register("password", {
+                required: "Password is required",
+                minLength: { value: 6, message: "Minimum length is 6" },
+              })}
+              type="password"
+              id="password"
+              placeholder="Password"
+              className="border p-2"
+            />
+            {errors.password && (
+              <p className="text-red-500">{errors.password.message}</p>
+            )}
+            <div className="forgot">
+              <a rel="noopener noreferrer" href="#">
+                Forgot Password ?
+              </a>
+            </div>
+          </div>
 
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded flex items-center justify-center gap-2"
-            disabled={loading}
-          >
+          <button type="submit" className="  sign" disabled={loading}>
             {loading ? (
               <>
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.372 0 0 5.372 0 12h4z"
-                  ></path>
-                </svg>
-                <span>Loading...</span>
+                <div className=" flex flex-row items-center justify-center gap-2 ">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.372 0 0 5.372 0 12h4z"
+                    ></path>
+                  </svg>
+                  <span>Loading...</span>
+                </div>
               </>
             ) : (
               <span>{isSignUp ? "Sign Up" : "Login"}</span>
@@ -212,18 +287,31 @@ export default function AuthPage() {
           </button>
         </form>
 
-        {!isLoggedIn && (
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+
+        <div className="social-message">
+          <div className="line"></div>
+          <p className="message">Login with social accounts</p>
+          <div className="line"></div>
+        </div>
+        <div className="social-icons">
+          <div id="googleSignInDiv" className="icon" />
+        </div>
+
+        <p className="signup">
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-blue-300 mt-4 underline"
+            // className="text-blue-300 mt-4 underline"
           >
             {isSignUp
               ? "Already have an account? Login"
               : "Don't have an account? Sign Up"}
           </button>
-        )}
-        {error && <p className="text-red-500 mt-2">{error}</p>}
+        </p>
       </div>
-    </>
+    </div>
   );
+}
+function jwt_decode(credential: any) {
+  throw new Error("Function not implemented.");
 }

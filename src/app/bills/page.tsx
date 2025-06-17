@@ -7,12 +7,15 @@ import Alert from "../alert";
 import { useAlert } from "../AlertContext";
 import IconCircle from "../IconCircle";
 import Nav from "../nav";
+import { useTheme } from "../Theme";
 export default function Split() {
   type Group = {
     _id: string;
     groupName: string;
     members: { uid: string; name: string }[];
   };
+  const { theme, themeClass, toggleTheme } = useTheme();
+
   const [groups, setGroups] = useState<Group[]>([]);
   const [modalGroupName, setModalGroupName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -227,13 +230,13 @@ export default function Split() {
           groups.map((group, index) => (
             <div
               key={index}
-              className="bg-gray-100 text-black px-3 py-3 rounded  shadow cursor-pointer transition select-none"
+              className={`${themeClass} px-3 py-3 rounded  shadow cursor-pointer transition select-none`}
               onClick={() => router.push(`/bills/${group._id}`)}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="font-bold">{group.groupName}</div>
                 <button
-                  className="btn btn-primary !text-black ml-2 !bg-transparent px-2 py-1 rounded !border-none"
+                  className="btn btn-primary !text-[inherit] ml-2 !bg-transparent px-2 py-1 rounded !border-none"
                   type="button"
                   data-bs-toggle="modal"
                   onClick={(e) => {
@@ -242,10 +245,10 @@ export default function Split() {
                   }}
                   data-bs-target="#deleteModal"
                 >
-                  <i className="bx bx-trash"></i>
+                  <i className="bx bx-trash text-[inherit]"></i>
                 </button>
               </div>
-              <div className="text-gray-600 text-sm">
+              <div className="opacity-50 text-sm">
                 {group.members.length} members :
                 {group.members.map((member) => member.name).join(", ")}
               </div>

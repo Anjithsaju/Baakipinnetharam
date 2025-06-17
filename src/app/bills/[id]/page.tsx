@@ -5,6 +5,7 @@ import { useAlert } from "../../AlertContext";
 import "boxicons/css/boxicons.min.css";
 //import "bootstrap/dist/css/bootstrap.min.css";
 import Nav from "../../nav";
+import { useTheme } from "@/app/Theme";
 type Member = { uid: string; name: string };
 
 type Bill = {
@@ -121,6 +122,8 @@ export default function GroupDetailsPage() {
     key?: number;
   } | null>(null);
   // Modal state
+  const { theme, themeClass, toggleTheme } = useTheme();
+
   const [showModal, setShowModal] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [selectedBillname, setSelectedBillName] = useState<string>("");
@@ -254,7 +257,7 @@ export default function GroupDetailsPage() {
               group.bills.map((bill, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-100 text-black px-4 py-3 rounded-lg shadow flex flex-col cursor-pointer  transition select-none"
+                  className={`${themeClass} px-4 py-3 rounded-lg shadow flex flex-col cursor-pointer  transition select-none`}
                   onClick={() => {
                     setSelectedBill(bill);
                     setShowModal(true);
@@ -266,7 +269,7 @@ export default function GroupDetailsPage() {
                     </span>
                     <button
                       //onClick={() => handleDelete(index)}
-                      className="btn btn-primary !text-black ml-2 !bg-transparent px-2 py-1 rounded !border-none"
+                      className="btn btn-primary !text-[inherit] ml-2 !bg-transparent px-2 py-1 rounded !border-none"
                       type="button"
                       data-bs-toggle="modal"
                       onClick={(e) => {
@@ -278,10 +281,10 @@ export default function GroupDetailsPage() {
                       <i className="bx bx-trash"></i>
                     </button>
                   </div>
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm opacity-50">
                     Total: ₹{bill.total ?? 0}
                   </span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs opacity-50">
                     Added by: {bill.addedname || "Unknown"}
                   </span>
                 </div>
@@ -292,7 +295,11 @@ export default function GroupDetailsPage() {
       {/* Bill Details Modal */}
       {showModal && selectedBill && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-3 w-[90%] max-h-[80%] overflow-auto max-w-md text-black shadow-lg flex flex-col">
+          <div
+            className={`${
+              theme === "light" ? "bg-white text-black" : themeClass
+            } rounded-xl p-3 w-[90%] max-h-[80%] overflow-auto max-w-md  shadow-lg flex flex-col`}
+          >
             <h2 className="text-xl font-bold mb-4">
               {selectedBill.name || "Untitled Bill"}
             </h2>
@@ -316,11 +323,11 @@ export default function GroupDetailsPage() {
               <span className="font-semibold">Paid By:</span>{" "}
               {selectedBill.paidBy || "Unknown"}
             </div>
-            <div className="mb-2">
+            <div className={`${theme == "glass" ? "opacity-80" : ""} mb-2`}>
               <span className="font-semibold">Items:</span>
-              <table className="w-full text-sm mt-2 border">
+              <table className={`w-full text-sm mt-2 border `}>
                 <thead>
-                  <tr className="bg-gray-200">
+                  <tr className="bg-gray-200 text-black ">
                     <th className="p-1 border">Name</th>
                     <th className="p-1 border">Qty</th>
                     <th className="p-1 border">Price</th>
@@ -360,11 +367,14 @@ export default function GroupDetailsPage() {
               </table>
             </div>
             {/* Bill Summary Section */}
-            <div className="mb-2 mt-4">
+
+            <div
+              className={`${theme == "glass" ? "opacity-80" : ""} mb-2 mt-4`}
+            >
               <span className="font-semibold">Summary:</span>
               <table className="w-full text-sm mt-2 border">
                 <thead>
-                  <tr className="bg-gray-200">
+                  <tr className="bg-gray-200 text-black ">
                     <th className="p-1 border">Name</th>
                     <th className="p-1 border">Amount</th>
                   </tr>
@@ -403,11 +413,19 @@ export default function GroupDetailsPage() {
       )}
       {showSummary && group && group.bills && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-8 w-[90%] max-w-md text-black shadow-lg flex flex-col">
+          <div
+            className={`${
+              theme === "light" ? "bg-white text-black" : themeClass
+            } rounded-xl p-8 w-[90%] max-w-md  shadow-lg flex flex-col`}
+          >
             <h2 className="text-xl font-bold mb-4">Expense Summary</h2>
-            <table className="w-full text-sm mt-2 border">
+            <table
+              className={`${
+                theme == "glass" ? "opacity-80" : ""
+              } w-full text-sm mt-2 border`}
+            >
               <thead>
-                <tr className="bg-gray-200">
+                <tr className="bg-gray-200 text-black">
                   <th className="p-1 border">Name</th>
                   <th className="p-1 border">Total Expense</th>
                 </tr>
@@ -425,9 +443,13 @@ export default function GroupDetailsPage() {
             </table>
             {/* Settlements Table */}
             <h3 className="text-lg font-semibold mt-6 mb-2">Who Owes Whom</h3>
-            <table className="w-full text-sm border">
+            <table
+              className={`${
+                theme == "glass" ? "opacity-80" : ""
+              } w-full text-sm border`}
+            >
               <thead>
-                <tr className="bg-gray-200">
+                <tr className="bg-gray-200 text-black">
                   <th className="p-1 border">From</th>
                   <th className="p-1 border">To</th>
                   <th className="p-1 border">Amount</th>

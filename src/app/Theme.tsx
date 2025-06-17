@@ -16,7 +16,8 @@ const ThemeContext = createContext<ThemeContextType>({
 const themes = {
   glass:
     "bg-[#333b4db0] text-white backdrop-blur-sm transition-colors duration-500 border-1 border-[#38497069]",
-  light: "bg-gray-300 text-black transition-colors duration-500",
+  light:
+    "bg-gray-300 text-black transition-colors duration-500 border-1 border-[#38497069]",
 };
 
 export function ThemeProvider({ children }: React.PropsWithChildren<{}>) {
