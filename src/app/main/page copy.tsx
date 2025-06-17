@@ -5,11 +5,8 @@ import { useState, useEffect } from "react";
 import Addmodal from "./Addmodal";
 import { useRouter } from "next/navigation";
 import ViewModal from "./ViewModal";
-import "@theme-toggles/react/css/Around.css";
-import { Around } from "@theme-toggles/react";
 import Alert from "../alert";
 import axios from "axios";
-import { useTheme } from "../Theme";
 import { isUserInSession } from "../session";
 interface DebtDueType {
   uid: string;
@@ -33,10 +30,6 @@ export default function Home() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error message
-  const glass = "bg-[#333b4d8f] text-white backdrop-blur-md";
-  const light = "bg-gray-300 text-black";
-
-  const { theme, themeClass, toggleTheme } = useTheme();
 
   useEffect(() => {
     async function check() {
@@ -285,21 +278,13 @@ export default function Home() {
       style={{ background: "linear-gradient(62deg, black, #00206b)" }}
       className="min-h-screen h-[100vh] flex flex-col items-center p-5 pt-2"
     >
-      <div className="flex flex-row justify-around w-full max-w-xl">
-        <Around
-          duration={750}
-          placeholder={undefined}
-          onPointerEnterCapture={undefined}
-          onPointerLeaveCapture={undefined}
-          onToggle={toggleTheme}
-        />
-        <h2 className="text-white font-semibold text-[30px]">
-          Baaki Pinne Tharam
-        </h2>
-      </div>
+      <h2 className="text-white font-semibold text-[30px]">
+        Baaki Pinne Tharam
+      </h2>
+
       <div className="grid grid-cols-2 gap-4 w-full max-w-md h-[40%] pt-4 text-black">
         <div
-          className={`h-full ${themeClass} rounded-lg p-4 relative cursor-pointer`}
+          className="h-full bg-gray-300 rounded-lg p-4 relative cursor-pointer"
           onClick={() => openModal(dues, "Dues")}
         >
           <h3 className="font-semibold text-lg">
@@ -317,7 +302,7 @@ export default function Home() {
         </div>
 
         <div
-          className={`h-full ${themeClass} rounded-lg p-4 relative cursor-pointer`}
+          className="h-full bg-gray-300 rounded-lg p-4 relative cursor-pointer"
           onClick={() => openModal(debts, "Debts")}
         >
           <h3 className="font-semibold text-lg">
@@ -335,9 +320,7 @@ export default function Home() {
         </div>
       </div>
       <div className="relative flex justify-center items-center gap-2 w-full my-4 text-black">
-        <div
-          className={` ${themeClass} rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12`}
-        >
+        <div className="bg-gray-300 text-black rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
           {/* History */}
 
           <IconCircle
@@ -394,7 +377,7 @@ export default function Home() {
       </div>
 
       <div
-        className={`w-full max-w-md h-[60%]  rounded-lg ${themeClass} p-4 overflow-auto cursor-pointer`}
+        className="w-full max-w-md h-[60%] bg-gray-300 rounded-lg text-black p-4 overflow-auto cursor-pointer"
         onClick={() => {
           setTransactionModalData(transactions); // Set modal data
           setIsTransactionModalOpen(true); // Open modal
@@ -408,11 +391,9 @@ export default function Home() {
           transactions.map((transaction, index) => (
             <p
               key={index}
-              className={`text-lg font-medium ${
-                theme === "light" ? "!text-gray-800 !bg-gray-100" : themeClass
-              } p-2 rounded-lg mt-2`}
+              className="text-lg font-medium text-gray-800 bg-gray-100 p-2 rounded-lg mt-2"
             >
-              <span className="text-[inherit]">{transaction.name}</span>:
+              <span className="text-black">{transaction.name}</span>:
               <span className="text-green-600"> ₹{transaction.amount}</span>
               {transaction.formattedTime && (
                 <span className="text-gray-500 text-sm ml-2">
@@ -458,11 +439,9 @@ export default function Home() {
 
       {isTransactionModalOpen && (
         <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
-          <div
-            className={`${themeClass} p-6 rounded-lg w-[90%] max-w-2xl   h-[90%]`}
-          >
+          <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl   h-[90%]">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-[inherit]">
+              <h3 className="text-lg font-semibold text-black">
                 Edit Transactions
               </h3>
               <button
@@ -481,9 +460,9 @@ export default function Home() {
                 {transactionModalData.map((transaction, index) => (
                   <li
                     key={index}
-                    className={`flex justify-between items-center ${themeClass} p-3 rounded-lg`}
+                    className="flex justify-between items-center bg-gray-100 p-3 rounded-lg"
                   >
-                    <div className="text-[inherit]">
+                    <div className="text-black">
                       {editIndex === index ? (
                         <>
                           <input
@@ -549,7 +528,7 @@ export default function Home() {
                             setTempAmount(transaction.amount);
                           }}
                         >
-                          <i className="bx bx-edit-alt text-[inherit]"></i>
+                          <i className="bx bx-edit-alt text-black"></i>
                         </button>
                       )}
                       <button

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Alert from "../alert";
+import { useTheme } from "../Theme";
 interface Person {
   uid: string;
   name: string;
@@ -21,6 +22,7 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
   const [transactionName, setTransactionName] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
+  const { theme, themeClass, toggleTheme } = useTheme();
 
   const handleSubmit = async () => {
     // Validation: Ensure required fields are filled
@@ -89,8 +91,12 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 text-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg w-80">
+    <div className="fixed inset-0 bg-black/30 text-black bg-opacity-50 flex justify-center items-center">
+      <div
+        className={`${
+          theme === "light" ? " !bg-white" : themeClass
+        } p-6 rounded-lg w-80`}
+      >
         <h3 className="text-lg font-semibold mb-4">Add Entry</h3>
 
         {/* Radio Buttons for Selection */}
@@ -173,7 +179,7 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
         {addType === "debt_due" && (
           <div className="mt-4">
             <select
-              className="border p-2 w-full mb-2"
+              className={`border p-2 w-full mb-2 ${themeClass}`}
               value={selectedPerson}
               onChange={(e) => setSelectedPerson(e.target.value)}
             >

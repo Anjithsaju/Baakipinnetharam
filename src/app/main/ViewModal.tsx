@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Alert from "../alert"; // Ensure this exists and supports type & message
+import { useTheme } from "../Theme";
 
 interface AddModalProps {
   closeModal: () => void;
@@ -31,6 +32,7 @@ export default function ViewModal({
     name: string;
     amount: number;
   }>({ isVisible: false, gpayid: null, name: "", amount: 0 });
+  const { theme, themeClass, toggleTheme } = useTheme();
 
   const handleSave = async (index: number) => {
     if (tempAmount !== null) {
@@ -184,8 +186,12 @@ export default function ViewModal({
   };
 
   return (
-    <div className="fixed inset-0 text-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg w-80">
+    <div className="fixed inset-0 bg-black/30 text-black bg-opacity-50 flex justify-center items-center">
+      <div
+        className={` ${
+          theme === "light" ? " !bg-white" : themeClass
+        } p-6 rounded-lg w-80`}
+      >
         <h3 className="text-lg font-semibold mb-4">{modalTitle}</h3>
         <ul>
           {modalData.map((item, index) => (
