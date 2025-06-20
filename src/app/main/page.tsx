@@ -41,7 +41,7 @@ export default function Home() {
   useEffect(() => {
     async function check() {
       const token = localStorage.getItem("jwtToken");
-      console.log("Token:", token);
+      //console.log("Token:", token);
 
       if (token) {
         try {
@@ -217,7 +217,7 @@ export default function Home() {
         setTransactionModalData(updatedData);
         setTransactions(updatedData);
         setAlert({ type: "success", message: "Transaction updated." });
-        console.log(alert);
+        //console.log(alert);
         setEditIndex(null);
         setTempName(null);
         setTempAmount(null);
@@ -234,7 +234,7 @@ export default function Home() {
     setLoadingIndex(index);
     try {
       const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
-      console.log(transactionModalData[index].formattedTime);
+      //console.log(transactionModalData[index].formattedTime);
       const response = await fetch(
         "https://baakipinnetharam.onrender.com/delete-transaction",
         {
@@ -356,7 +356,11 @@ export default function Home() {
 
           {/* Help */}
 
-          <IconCircle className="bx bx-help-circle " text="Help" />
+          <IconCircle
+            className="bx bx-help-circle "
+            text="Help"
+            onClick={() => router.push("/help")}
+          />
 
           {/* Add */}
 

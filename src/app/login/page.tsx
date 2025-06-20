@@ -70,7 +70,8 @@ export default function AuthPage() {
 
       setIsLoggedIn(true);
       reset();
-      router.push("/main");
+      if (isSignUp) router.push("/help");
+      else router.push("/main");
     } catch (err: any) {
       setError(err.message || "Authentication failed.");
     } finally {
@@ -118,7 +119,8 @@ export default function AuthPage() {
       localStorage.setItem("jwtToken", result.token1);
       console.log("Login successful:", result.token1);
       setIsLoggedIn(true);
-      router.push("/main");
+      if (result.signup) router.push("/help");
+      else router.push("/main");
     } catch (err: any) {
       console.error("Google login error:", err);
       setError(err.message || "Google login failed.");
