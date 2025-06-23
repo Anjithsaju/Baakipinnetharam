@@ -226,12 +226,21 @@ function SlideTransition({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    const timeout = setTimeout(() => {
-      if (containerRef.current) {
-        onHeightReady(containerRef.current.offsetHeight);
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => {
+      if (el) {
+        onHeightReady(el.offsetHeight);
       }
-    }, 0); // run after paint
-    return () => clearTimeout(timeout);
+    });
+
+    observer.observe(el);
+
+    // Initial call
+    onHeightReady(el.offsetHeight);
+
+    return () => observer.disconnect();
   }, [children, onHeightReady]);
 
   return (

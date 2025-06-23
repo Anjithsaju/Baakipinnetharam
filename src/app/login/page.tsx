@@ -117,9 +117,9 @@ export default function AuthPage() {
       if (!res.ok) throw new Error(result.message);
 
       localStorage.setItem("jwtToken", result.token1);
-      console.log("Login successful:", result.token1);
+      console.log("Login successful:", result);
       setIsLoggedIn(true);
-      if (result.signup) router.push("/help");
+      if (result.isSignup) router.push("/help");
       else router.push("/main");
     } catch (err: any) {
       console.error("Google login error:", err);

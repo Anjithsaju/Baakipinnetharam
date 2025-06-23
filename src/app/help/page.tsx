@@ -101,7 +101,7 @@ export default function TestPage() {
           <p>
             &bull; View your personal expenses, debts, and dues at a glance.
           </p>
-          <img src="/images/home.png" className="rounded-2xl " alt="" />
+          <img src="/images/home.png" className="rounded-2xl " alt="image" />
           <p>
             &bull; Balances are synced with others for real-time accuracy.
             Personal expenses remain private.
