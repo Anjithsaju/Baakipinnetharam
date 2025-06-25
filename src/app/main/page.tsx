@@ -11,6 +11,7 @@ import Alert from "../alert";
 import axios from "axios";
 import { useTheme } from "../Theme";
 import { isUserInSession } from "../session";
+import ConfirmModal from "../ConfirmModal";
 interface DebtDueType {
   uid: string;
   name: string;
@@ -108,6 +109,12 @@ export default function Home() {
   const [tempAmount, setTempAmount] = useState<number | null>(null);
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleCancel = () => {
+    console.log("Action cancelled");
+    setModalOpen(false);
+  };
   const fetchData = () => {
     const token = localStorage.getItem("jwtToken"); // Retrieve the token from localStorage
 
@@ -150,6 +157,39 @@ export default function Home() {
       .catch((error) => console.error("Error fetching data:", error));
   };
 
+  const handleclearall = async () => {
+    try {
+      const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token
+
+      const response = await fetch(
+        "https://baakipinnetharam.onrender.com/delete-all",
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+          body: JSON.stringify({
+            type: "transactions",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        setTransactionModalData([]); // Clear all transactions
+        setTransactions([]); // Update main transactions
+        setIsTransactionModalOpen(false); // Close modal
+        setAlert({ type: "success", message: "Entry deleted successfully!" });
+        setModalOpen(false);
+      } else {
+        setAlert({ type: "error", message: "Failed to delete" });
+      }
+    } catch (error) {
+      console.error("Error deleting entry:", error);
+      setAlert({ type: "error", message: "An error occurred while deleting." });
+    }
+  };
   useEffect(() => {
     fetchData();
   }, [refreshKey]);
@@ -167,17 +207,7 @@ export default function Home() {
   const openAddModal = () => {
     setIsAddModalOpen(true);
   };
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem("jwtToken");
 
-      localStorage.removeItem("jwtToken"); // Remove the token from localStorage
-      console.log("Logout successful!");
-      router.push("/login");
-    } catch (err: any) {
-      console.error("Logout failed.", err);
-    }
-  };
   const totalDues = dues.reduce((sum, item) => sum + item.amount, 0);
   const totalDebts = debts.reduce((sum, item) => sum + item.amount, 0);
   const totalTransactions = transactions.reduce(
@@ -390,9 +420,9 @@ export default function Home() {
           {/* Logout */}
 
           <IconCircle
-            className="bx bx-log-out "
+            className="bx bx-user "
             text="Profile"
-            onClick={handleLogout}
+            onClick={() => router.push("/profile")}
           />
         </div>
       </div>
@@ -463,7 +493,9 @@ export default function Home() {
       {isTransactionModalOpen && (
         <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
           <div
-            className={`${themeClass} p-6 rounded-lg w-[90%] max-w-2xl   h-[90%]`}
+            className={` ${
+              theme === "light" ? " !bg-white text-black" : themeClass
+            } p-6 rounded-lg w-[85%] max-w-xs `}
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-[inherit]">
@@ -471,21 +503,24 @@ export default function Home() {
               </h3>
               <button
                 onClick={() => {
-                  setTransactionModalData([]); // Clear all transactions
-                  setTransactions([]); // Update main transactions
-                  setIsTransactionModalOpen(false); // Close modal
+                  if (transactionModalData.length > 0) {
+                    setModalOpen(true);
+                  } else
+                    setAlert({ type: "error", message: "Nothing to delete" });
                 }}
                 className="text-red-500 font-bold"
               >
                 Clear All
               </button>
             </div>
-            <div className="overflow-auto h-[85%]">
+            <div className="overflow-auto max-h-[50vh]">
               <ul className="space-y-4">
                 {transactionModalData.map((transaction, index) => (
                   <li
                     key={index}
-                    className={`flex justify-between items-center ${themeClass} p-3 rounded-lg`}
+                    className={` ${
+                      theme === "light" ? " !bg-black/5 text-black" : themeClass
+                    } flex justify-between items-center p-3 rounded-lg`}
                   >
                     <div className="text-[inherit]">
                       {editIndex === index ? (
@@ -584,6 +619,12 @@ export default function Home() {
         </div>
       )}
       {alert && <Alert type={alert.type} message={alert.message} />}
+      <ConfirmModal
+        isOpen={modalOpen}
+        message="Are you sure you want to delete all your data?"
+        onConfirm={handleclearall}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

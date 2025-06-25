@@ -115,29 +115,37 @@ export default function FindFriends() {
 
       <div className="relative flex justify-center items-center gap-2 w-full my-4 text-black">
         <div className="bg-gray-300 rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
-          {["/history", "/search", "/main", "/messages", "/profile"].map(
-            (path, i) => (
-              <button
-                key={path}
-                onClick={() => router.push(path)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  path === "/search" ? "bg-yellow-400" : "bg-gray-200"
+          {[
+            "/history",
+            "/search",
+            "/help",
+            "/main",
+            "/bills",
+            "/messages",
+            "/profile",
+          ].map((path, i) => (
+            <button
+              key={path}
+              onClick={() => router.push(path)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                path === "/search" ? "bg-yellow-400" : "bg-gray-200"
+              }`}
+            >
+              <i
+                className={`bx ${
+                  [
+                    "bx-history",
+                    "bx-search",
+                    "bx bx-help-circle ",
+                    "bx-home-alt",
+                    "bx bxs-receipt",
+                    "bx-envelope",
+                    "bx-user",
+                  ][i]
                 }`}
-              >
-                <i
-                  className={`bx ${
-                    [
-                      "bx-history",
-                      "bx-search",
-                      "bx-home-alt",
-                      "bx-envelope",
-                      "bx-user",
-                    ][i]
-                  }`}
-                ></i>
-              </button>
-            )
-          )}
+              ></i>
+            </button>
+          ))}
         </div>
       </div>
 

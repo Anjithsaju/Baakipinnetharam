@@ -47,6 +47,7 @@ export default function Split() {
   const [billName, setBillName] = useState("");
   const [paidBy, setPaidBy] = useState(""); // <-- New state for "Paid By"
   const [activeTab, setActiveTab] = useState(0);
+  const [newtotal, setNewTotal] = useState(0);
   useEffect(() => {
     const link = document.createElement("link");
     link.rel = "stylesheet";
@@ -121,7 +122,8 @@ export default function Split() {
         });
       }
     });
-
+    const newtotal = people.reduce((sum, person) => sum + person.money, 0);
+    setNewTotal(newtotal);
     setPeople((prev) =>
       prev.map((p) => ({
         ...p,
@@ -864,7 +866,18 @@ export default function Split() {
         </div>
 
         <div className="bg-white/90 rounded-2xl shadow-lg px-3 py-3  flex flex-col items-center">
-          <h3 className="text-2xl font-bold !text-gray-900 mb-4">Summary</h3>
+          <div className="flex flex-row gap-3 items-baseline">
+            <h3 className="text-2xl font-bold !text-gray-900 mb-4">Summary</h3>
+            <h6 className="text-lg font-semibold !text-gray-800 mb-2">
+              Total:₹
+              <span className="text-green-600 text-xl font-bold">
+                {" "}
+                {Math.round(
+                  people.reduce((sum, person) => sum + person.money, 0)
+                )}
+              </span>
+            </h6>
+          </div>
           <div className="flex flex-row flex-wrap gap-3 justify-center w-full">
             {people.map((person) => (
               <div key={person.uid}>

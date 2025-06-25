@@ -63,7 +63,42 @@ export default function TestPage() {
       className="min-h-screen h-[100vh] flex flex-col items-center p-5 pt-2"
       style={{ background: "linear-gradient(62deg, black, #00206b)" }}
     >
-      <h2 className="text-white font-semibold text-[30px] !mt-5 !mb-8">
+      <div className="relative flex justify-center items-center gap-2 w-full my-4 text-black">
+        <div className="bg-gray-300 rounded-full flex items-center justify-center gap-[15px] w-auto h-auto py-[6px] px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12">
+          {[
+            "/history",
+            "/search",
+            "/help",
+            "/main",
+            "/bills",
+            "/messages",
+            "/profile",
+          ].map((path, i) => (
+            <button
+              key={path}
+              onClick={() => router.push(path)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                path === "/help" ? "bg-yellow-400" : "bg-gray-200"
+              }`}
+            >
+              <i
+                className={`bx ${
+                  [
+                    "bx-history",
+                    "bx-search",
+                    "bx bx-help-circle ",
+                    "bx-home-alt",
+                    "bx bxs-receipt",
+                    "bx-envelope",
+                    "bx-user",
+                  ][i]
+                }`}
+              ></i>
+            </button>
+          ))}
+        </div>
+      </div>
+      <h2 className="text-white font-semibold text-[30px]  !mb-2">
         Baaki Pinne Tharam
       </h2>
       {/* <p
