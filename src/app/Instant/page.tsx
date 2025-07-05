@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import "boxicons/css/boxicons.min.css";
 //import "bootstrap/dist/css/bootstrap.min.css";
 import Nav from "../nav";
-
+import { extractAndParseBill } from "@/app/parsebill";
 export default function Split() {
   useEffect(() => {
     const link = document.createElement("link");
@@ -100,38 +100,71 @@ export default function Split() {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [newMembers, setNewMembers] = useState("");
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
+  // const handleExtractBill = async (file: File) => {
+  //   setLoading(true); // Start loading
+  //   const formData = new FormData();
+  //   formData.append("image", file);
+
+  //   try {
+  //     const res = await fetch(
+  //       "https://baakipinnetharam.onrender.com/extract-bill",
+  //       {
+  //         method: "POST",
+  //         body: formData,
+  //       }
+  //     );
+  //     if (!res.ok) {
+  //       const err = await res.json();
+  //       alert("Error: " + err.error);
+  //       setLoading(false);
+  //       return;
+  //     }
+  //     const data = await res.json();
+  //     // data.items contains the structured items from the bill
+  //     console.log("Extracted items:", data.items);
+
+  //     // Fill the UI with extracted items
+  //     setGroups(
+  //       data.items.map(
+  //         (item: any, idx: number) => item.name || `Item ${idx + 1}`
+  //       )
+  //     );
+  //     setQuantities(data.items.map((item: any) => item.qty?.toString() || "1"));
+  //     setAmounts(
+  //       data.items.map((item: any) =>
+  //         (item.price && Number(item.price) !== 0
+  //           ? item.price
+  //           : item.amount && Number(item.amount) !== 0
+  //           ? item.amount
+  //           : ""
+  //         ).toString()
+  //       )
+  //     );
+  //     setSelectedPeople(data.items.map(() => [])); // Reset selected people for new items
+  //     setItemNames(
+  //       data.items.map(
+  //         (item: any, idx: number) => item.item || `Item ${idx + 1}`
+  //       )
+  //     );
+  //   } catch (err) {
+  //     alert("Failed to extract bill: " + (err as Error).message);
+  //   }
+  //   setLoading(false); // Stop loading
+  // };
+  // Handler to update members from modal
+  const [progress, setProgress] = useState(0);
   const handleExtractBill = async (file: File) => {
-    setLoading(true); // Start loading
-    const formData = new FormData();
-    formData.append("image", file);
-
+    setLoading(true);
+    setProgress(0);
     try {
-      const res = await fetch(
-        "https://baakipinnetharam.onrender.com/extract-bill",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      if (!res.ok) {
-        const err = await res.json();
-        alert("Error: " + err.error);
-        setLoading(false);
-        return;
-      }
-      const data = await res.json();
-      // data.items contains the structured items from the bill
-      console.log("Extracted items:", data.items);
+      const parsedItems = await extractAndParseBill(file, setProgress);
 
-      // Fill the UI with extracted items
-      setGroups(
-        data.items.map(
-          (item: any, idx: number) => item.name || `Item ${idx + 1}`
-        )
-      );
-      setQuantities(data.items.map((item: any) => item.qty?.toString() || "1"));
+      console.log("Parsed items:", parsedItems);
+
+      setGroups(parsedItems.map((item, idx) => item.item || `Item ${idx + 1}`));
+      setQuantities(parsedItems.map((item) => item.qty?.toString() || "1"));
       setAmounts(
-        data.items.map((item: any) =>
+        parsedItems.map((item) =>
           (item.price && Number(item.price) !== 0
             ? item.price
             : item.amount && Number(item.amount) !== 0
@@ -140,19 +173,16 @@ export default function Split() {
           ).toString()
         )
       );
-      setSelectedPeople(data.items.map(() => [])); // Reset selected people for new items
+      setSelectedPeople(parsedItems.map(() => []));
       setItemNames(
-        data.items.map(
-          (item: any, idx: number) => item.item || `Item ${idx + 1}`
-        )
+        parsedItems.map((item, idx) => item.item || `Item ${idx + 1}`)
       );
     } catch (err) {
       alert("Failed to extract bill: " + (err as Error).message);
     }
-    setLoading(false); // Stop loading
-  };
-  // Handler to update members from modal
 
+    setLoading(false);
+  };
   const handleFriendSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const uid = e.target.value;
     const person = friends.find((p) => p.uid === uid);
@@ -340,6 +370,18 @@ export default function Split() {
             <span className="text-lg text-black font-semibold">
               Extracting bill, please wait...
             </span>
+            <div
+              className="progress w-full"
+              role="progressbar"
+              aria-label="OCR Progress"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div className="progress-bar" style={{ width: `${progress}%` }}>
+                {progress}%
+              </div>
+            </div>
           </div>
         </div>
       )}

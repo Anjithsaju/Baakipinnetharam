@@ -129,6 +129,7 @@ export default function AuthPage() {
 
   useEffect(() => {
     // Load Google script
+    const uri = process.env.NEXT_PUBLIC_GOOGLE_AUTH_URI;
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
@@ -138,8 +139,7 @@ export default function AuthPage() {
     script.onload = () => {
       if (window.google) {
         window.google.accounts.id.initialize({
-          client_id:
-            "402890799956-ccogmmeun8uqatndmmt0k3n0hhpm2gha.apps.googleusercontent.com", // ⬅️ Replace with your actual client ID
+          client_id: uri, // ⬅️ Replace with your actual client ID
           callback: handleGoogleResponse,
         });
 
