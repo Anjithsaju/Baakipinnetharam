@@ -12,7 +12,6 @@ import axios from "axios";
 import { useTheme } from "../Theme";
 import { isUserInSession } from "../session";
 import ConfirmModal from "../ConfirmModal";
-import TransactionsCard from "./transactionmodal";
 interface DebtDueType {
   uid: string;
   name: string;
@@ -428,33 +427,38 @@ export default function Home() {
         </div>
       </div>
 
-      <TransactionsCard
-        transactions={transactions.map((t) => ({
-          ...t,
-          date: t.formattedTime ?? "",
-        }))}
-        theme={theme}
-        themeClass={themeClass}
-        editIndex={editIndex}
-        setEditIndex={setEditIndex}
-        tempName={tempName}
-        setTempName={setTempName}
-        tempAmount={tempAmount}
-        setTempAmount={setTempAmount}
-        loadingIndex={loadingIndex}
-        setLoadingIndex={setLoadingIndex}
-        handleSave={handleSave}
-        handleDelete={handleDelete}
-        isTransactionModalOpen={isTransactionModalOpen}
-        setIsTransactionModalOpen={setIsTransactionModalOpen}
-        transactionModalData={transactionModalData.map((t) => ({
-          ...t,
-          date: t.formattedTime ?? "",
-        }))}
-        setTransactionModalData={setTransactionModalData}
-        alert={alert}
-        setAlert={setAlert}
-      />
+      <div
+        className={`w-full max-w-md h-[60%]  rounded-lg ${themeClass} p-4 overflow-auto cursor-pointer`}
+        onClick={() => {
+          setTransactionModalData(transactions); // Set modal data
+          setIsTransactionModalOpen(true); // Open modal
+        }}
+      >
+        <h3 className="font-semibold text-lg relative">
+          Transactions{" "}
+          <span className="absolute right-4">₹{totalTransactions}</span>
+        </h3>
+        {transactions.length > 0 ? (
+          transactions.map((transaction, index) => (
+            <p
+              key={index}
+              className={`text-lg font-medium ${
+                theme === "light" ? "!text-gray-800 !bg-gray-100" : themeClass
+              } p-2 rounded-lg mt-2`}
+            >
+              <span className="text-[inherit]">{transaction.name}</span>:
+              <span className="text-green-600"> ₹{transaction.amount}</span>
+              {transaction.formattedTime && (
+                <span className="text-gray-500 text-sm ml-2">
+                  [ {transaction.formattedTime} ]
+                </span>
+              )}
+            </p>
+          ))
+        ) : (
+          <p className="text-sm text-gray-600 mt-2">No transactions found.</p>
+        )}
+      </div>
 
       {isModalOpen && (
         <ViewModal
@@ -486,6 +490,134 @@ export default function Home() {
         />
       )}
 
+      {isTransactionModalOpen && (
+        <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
+          <div
+            className={` ${
+              theme === "light" ? " !bg-white text-black" : themeClass
+            } p-6 rounded-lg w-[85%] max-w-xs `}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-[inherit]">
+                Edit Transactions
+              </h3>
+              <button
+                onClick={() => {
+                  if (transactionModalData.length > 0) {
+                    setModalOpen(true);
+                  } else
+                    setAlert({ type: "error", message: "Nothing to delete" });
+                }}
+                className="text-red-500 font-bold"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="overflow-auto max-h-[50vh]">
+              <ul className="space-y-4">
+                {transactionModalData.map((transaction, index) => (
+                  <li
+                    key={index}
+                    className={` ${
+                      theme === "light" ? " !bg-black/5 text-black" : themeClass
+                    } flex justify-between items-center p-3 rounded-lg`}
+                  >
+                    <div className="text-[inherit]">
+                      {editIndex === index ? (
+                        <>
+                          <input
+                            type="text"
+                            value={
+                              tempName !== null ? tempName : transaction.name
+                            }
+                            onChange={(e) => setTempName(e.target.value)}
+                            className="border p-1 rounded w-40"
+                          />
+                          <input
+                            type="number"
+                            value={
+                              tempAmount !== null
+                                ? tempAmount
+                                : transaction.amount
+                            }
+                            onChange={(e) =>
+                              setTempAmount(parseFloat(e.target.value))
+                            }
+                            className="border p-1 rounded w-20 ml-2"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <span>{transaction.name}</span>:{" "}
+                          <span className="text-green-600">
+                            ₹{transaction.amount}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {editIndex === index ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setEditIndex(null);
+                              setTempName(null);
+                              setTempAmount(null);
+                            }}
+                            className="text-red-500 ml-2"
+                          >
+                            <i className="bx bx-x"></i>
+                          </button>
+                          <button
+                            onClick={() => handleSave(index)}
+                            className="bg-green-500 text-white px-2 py-1 rounded"
+                            disabled={loadingIndex === index}
+                          >
+                            {loadingIndex === index ? (
+                              "⏳"
+                            ) : (
+                              <i className="bx bx-check"></i>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditIndex(index);
+                            setTempName(transaction.name);
+                            setTempAmount(transaction.amount);
+                          }}
+                        >
+                          <i className="bx bx-edit-alt text-[inherit]"></i>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
+                        disabled={loadingIndex === index}
+                      >
+                        {loadingIndex === index ? (
+                          "⏳"
+                        ) : (
+                          <i className="bx bx-trash"></i>
+                        )}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setIsTransactionModalOpen(false)}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {alert && <Alert type={alert.type} message={alert.message} />}
       <ConfirmModal
         isOpen={modalOpen}
