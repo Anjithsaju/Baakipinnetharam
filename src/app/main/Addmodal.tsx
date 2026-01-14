@@ -21,12 +21,24 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
   const [Description, setDescription] = useState("");
   const [transactionName, setTransactionName] = useState("");
   const [amount, setAmount] = useState("");
+  // For Add Debt tab
+  const [debtPerson, setDebtPerson] = useState("");
+  const [debtAmount, setDebtAmount] = useState("");
+  const [debtDescription, setDebtDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const { theme, themeClass, toggleTheme } = useTheme();
 
   const handleSubmit = async () => {
     // Validation: Ensure required fields are filled
+
     if (addType === "debt_due" && (!selectedPerson || !amount)) {
+      setAlert({
+        type: "error",
+        message: "Please fill in all required fields (Person and Amount).",
+      });
+      return;
+    }
+    if (addType === "add_debt" && (!debtPerson || !debtAmount)) {
       setAlert({
         type: "error",
         message: "Please fill in all required fields (Person and Amount).",
@@ -42,19 +54,28 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
     }
     setLoading(true); // Start loading
 
-    const payload =
-      addType === "transaction"
-        ? {
-            type: "transaction",
-            name: transactionName,
-            amount: parseFloat(amount),
-          }
-        : {
-            type: "debt_due",
-            person: selectedPerson,
-            amount: parseFloat(amount),
-            desc: Description,
-          };
+    let payload;
+    if (addType === "transaction") {
+      payload = {
+        type: "transaction",
+        name: transactionName,
+        amount: parseFloat(amount),
+      };
+    } else if (addType === "debt_due") {
+      payload = {
+        type: "debt_due",
+        person: selectedPerson,
+        amount: parseFloat(amount),
+        desc: Description,
+      };
+    } else if (addType === "add_debt") {
+      payload = {
+        type: "add_debt",
+        person: debtPerson,
+        amount: parseFloat(debtAmount),
+        desc: debtDescription,
+      };
+    }
 
     try {
       const token = localStorage.getItem("jwtToken"); // Retrieve the JWT token from localStorage
@@ -99,47 +120,108 @@ export default function AddModal({ closeModal, people }: AddModalProps) {
       >
         <h3 className="text-lg font-semibold mb-4">Add Entry</h3>
 
-        {/* Radio Buttons for Selection */}
-        <div className="mb-4 flex justify-between">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="entryType"
-              value="transaction"
-              checked={addType === "transaction"}
-              onChange={() => setAddType("transaction")}
-              className="mr-2"
-            />
-            Add Transaction
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="entryType"
-              value="debt_due"
-              checked={addType === "debt_due"}
-              onChange={() => setAddType("debt_due")}
-              className="mr-2"
-            />
-            Add Due
-          </label>
+        {/* Modern Tab Bar */}
+        <div className="mb-6 flex border-b border-gray-200">
+          {[
+            { key: "transaction", label: "Transaction" },
+            { key: "debt_due", label: "Due" },
+            { key: "add_debt", label: "Debt" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setAddType(tab.key)}
+              className={`flex-1 py-2 text-center transition-all duration-150 font-medium text-sm
+                ${
+                  addType === tab.key
+                    ? "border-b-2 border-blue-500 bg-blue-50 text-blue-700"
+                    : "text-gray-500 hover:bg-gray-100"
+                }
+                rounded-t-lg`}
+              style={{ outline: "none" }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+        {/* Add Debt Form */}
+        {addType === "add_debt" && (
+          <div className="mt-4">
+            <select
+              className={`border p-2 w-full mb-2 ${themeClass}`}
+              value={debtPerson}
+              onChange={(e) => setDebtPerson(e.target.value)}
+            >
+              <option value="" disabled>
+                Select a person
+              </option>
+              {people.map((person) => (
+                <option key={person.uid} value={person.uid}>
+                  {person.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="number"
+              placeholder="Amount"
+              value={debtAmount}
+              onChange={(e) => setDebtAmount(e.target.value)}
+              className="border p-2 w-full mb-2"
+            />
+            <input
+              type="text"
+              placeholder="Description"
+              value={debtDescription}
+              onChange={(e) => setDebtDescription(e.target.value)}
+              className="border p-2 w-full mb-2"
+            />
+            <button
+              onClick={handleSubmit}
+              className="bg-green-500 text-white px-4 py-2 rounded w-full flex items-center justify-center"
+              disabled={loading}
+            >
+              {loading ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                  ></path>
+                </svg>
+              ) : (
+                "Submit"
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Transaction Form */}
         {addType === "transaction" && (
           <div className="mt-4">
             <input
-              type="text"
-              placeholder="Transaction Name"
-              value={transactionName}
-              onChange={(e) => setTransactionName(e.target.value)}
-              className="border p-2 w-full mb-2"
-            />
-            <input
               type="number"
               placeholder="Amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              className="border p-2 w-full mb-2"
+            />
+            <input
+              type="text"
+              placeholder="Transaction Name"
+              value={transactionName}
+              onChange={(e) => setTransactionName(e.target.value)}
               className="border p-2 w-full mb-2"
             />
             <button

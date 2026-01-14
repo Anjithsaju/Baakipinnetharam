@@ -1,64 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { format, subMonths } from "date-fns"; // for formatting month names
 
-type TransactionType = {
-  uid: string;
+interface TransactionType {
+  uid?: string;
   name: string;
   amount: number;
-  formattedTime?: string;
   date?: string;
-};
-type TransactionsCardProps = {
+  formattedTime?: string;
+}
+
+interface TransactionModalProps {
   transactions: TransactionType[];
   theme: string;
   themeClass: string;
-  editIndex: number | null;
-  setEditIndex: (index: number | null) => void;
-  tempName: string | null;
-  setTempName: (name: string | null) => void;
-  tempAmount: number | null;
-  setTempAmount: (amount: number | null) => void;
-  loadingIndex: number | null;
-  setLoadingIndex: (index: number | null) => void;
-  handleSave: (index: number) => void;
-  handleDelete: (index: number) => void;
-  isTransactionModalOpen: boolean;
+  setTransactionModalData: (data: TransactionType[]) => void;
   setIsTransactionModalOpen: (open: boolean) => void;
-  transactionModalData: TransactionType[];
-  setTransactionModalData: React.Dispatch<
-    React.SetStateAction<TransactionType[]>
-  >;
-  alert: { type: "success" | "error" | "info"; message: string } | null;
-  setAlert: (
-    alert: { type: "success" | "error" | "info"; message: string } | null
-  ) => void;
-};
+}
 
-const TransactionsCard = ({
+const TransactionsCard: React.FC<TransactionModalProps> = ({
   transactions,
   theme,
   themeClass,
-  editIndex,
-  setEditIndex,
-  tempName,
-  setTempName,
-  tempAmount,
-  setTempAmount,
-  loadingIndex,
-  setLoadingIndex,
-  handleSave,
-  handleDelete,
-  isTransactionModalOpen,
-  setIsTransactionModalOpen,
-  transactionModalData,
   setTransactionModalData,
-  alert,
-  setAlert,
-}: TransactionsCardProps) => {
-  const [showMenu, setShowMenu] = useState(false);
+  setIsTransactionModalOpen,
+}) => {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [showMenu, setShowMenu] = useState(false);
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [groupMode, setGroupMode] = useState<"default" | "day" | "week">(
+    "default"
+  );
+
+  // Track expanded groups (day or week)
+  const [expandedGroups, setExpandedGroups] = useState<{
+    [key: string]: boolean;
+  }>({});
+  // Track expanded days inside each week
+  const [expandedDaysByWeek, setExpandedDaysByWeek] = useState<{
+    [weekKey: string]: { [dayKey: string]: boolean };
+  }>({});
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -89,6 +70,32 @@ const TransactionsCard = ({
       new Date(t.date).getMonth() === selectedMonth.getMonth() &&
       new Date(t.date).getFullYear() === selectedMonth.getFullYear()
   );
+
+  // Group transactions by day or week
+  let grouped: { [key: string]: TransactionType[] } = {};
+  if (groupMode === "day") {
+    filteredTransactions.forEach((t) => {
+      if (t.date) {
+        const day = format(new Date(t.date), "yyyy-MM-dd");
+        if (!grouped[day]) grouped[day] = [];
+        grouped[day].push(t);
+      }
+    });
+  } else if (groupMode === "week") {
+    filteredTransactions.forEach((t) => {
+      if (t.date) {
+        const d = new Date(t.date);
+        // Get week start (Monday)
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when Sunday
+        const weekStart = new Date(d.setDate(diff));
+        weekStart.setHours(0, 0, 0, 0);
+        const weekKey = format(weekStart, "yyyy-MM-dd");
+        if (!grouped[weekKey]) grouped[weekKey] = [];
+        grouped[weekKey].push(t);
+      }
+    });
+  }
 
   const totalTransactions = filteredTransactions.reduce(
     (sum, t) => sum + t.amount,
@@ -160,14 +167,9 @@ const TransactionsCard = ({
   return (
     <div
       className={`w-full max-w-md h-[60%] rounded-lg ${themeClass} p-4 overflow-auto cursor-pointer relative`}
-      //   onClick={() => {
-      //     setTransactionModalData(filteredTransactions);
-      //     setIsTransactionModalOpen(true);
-      //   }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        {/* Hamburger menu */}
         {/* Title + Month */}
         <h3 className="font-semibold text-lg text-left flex-1">
           Transactions {"   "}
@@ -258,18 +260,62 @@ const TransactionsCard = ({
                 )}
               </div>
 
+              {/* Grouping toggles */}
               <button
-                className="w-full text-left p-3 hover:bg-gray-100 transition-colors rounded-b-lg font-medium text-gray-700"
+                className={`w-full text-left p-3 transition-colors font-medium flex items-center gap-2 ${
+                  groupMode === "default"
+                    ? "bg-blue-100 text-blue-800"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
                 onClick={() => {
-                  setTransactionModalData(filteredTransactions); // set data for modal
-                  setIsTransactionModalOpen(true); // open modal
-                  setShowMenu(false); // close dropdown menu
+                  setGroupMode("default");
+                  setShowMenu(false);
+                }}
+                title="Show all transactions"
+              >
+                Default View
+              </button>
+              <button
+                className={`w-full text-left p-3 transition-colors font-medium flex items-center gap-2 ${
+                  groupMode === "day"
+                    ? "bg-blue-100 text-blue-800"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+                onClick={() => {
+                  setGroupMode("day");
+                  setShowMenu(false);
+                }}
+                title="Group by day"
+              >
+                Group by Day
+              </button>
+              <button
+                className={`w-full text-left p-3 transition-colors font-medium flex items-center gap-2 ${
+                  groupMode === "week"
+                    ? "bg-blue-100 text-blue-800"
+                    : "hover:bg-gray-100 text-gray-700"
+                }`}
+                onClick={() => {
+                  setGroupMode("week");
+                  setShowMenu(false);
+                }}
+                title="Group by week"
+              >
+                Group by Week
+              </button>
+
+              <button
+                className="w-full text-left p-3 hover:bg-gray-100 transition-colors font-medium text-gray-700"
+                onClick={() => {
+                  setTransactionModalData(filteredTransactions);
+                  setIsTransactionModalOpen(true);
+                  setShowMenu(false);
                 }}
               >
                 Edit
               </button>
               <button
-                className="w-full text-left p-3 hover:bg-gray-100 transition-colors rounded-b-lg font-medium text-gray-700"
+                className="w-full text-left p-3 hover:bg-gray-100 transition-colors font-medium text-gray-700"
                 onClick={handleDownloadDoc}
               >
                 Download PDF
@@ -280,158 +326,233 @@ const TransactionsCard = ({
       </div>
 
       {/* Transaction list */}
-      {filteredTransactions.length > 0 ? (
-        filteredTransactions.map((transaction, index) => (
-          <p
-            key={index}
-            className={`text-lg font-medium ${
-              theme === "light" ? "!text-gray-800 !bg-gray-100" : themeClass
-            } p-2 rounded-lg mt-2`}
-          >
-            <span className="text-[inherit]">{transaction.name}</span>:
-            <span className="text-green-600"> ₹{transaction.amount}</span>
-            {transaction.formattedTime && (
-              <span className="text-sm text-gray-600 mt-2">
-                <span className="text-gray-500 text-sm ml-2">
-                  {transaction.formattedTime}
+      {groupMode === "default" ? (
+        filteredTransactions.length > 0 ? (
+          filteredTransactions.map((transaction, index) => (
+            <p
+              key={index}
+              className={`text-lg font-medium ${
+                theme === "light" ? "!text-gray-800 !bg-gray-100" : themeClass
+              } p-2 rounded-lg mt-2`}
+            >
+              <span className="text-[inherit]">{transaction.name}</span>:
+              <span className="text-green-600"> ₹{transaction.amount}</span>
+              {transaction.formattedTime && (
+                <span className="text-sm text-gray-600 mt-2">
+                  <span className="text-gray-500 text-sm ml-2">
+                    {transaction.formattedTime}
+                  </span>
                 </span>
-              </span>
-            )}
+              )}
+            </p>
+          ))
+        ) : (
+          <p className="text-sm text-gray-600 mt-2">
+            No transactions found for {format(selectedMonth, "MMMM yyyy")}.
           </p>
-        ))
+        )
+      ) : Object.keys(grouped).length > 0 ? (
+        // Compute week numbers for the selected month
+        (() => {
+          // Get all week keys sorted
+          const weekKeys = Object.keys(grouped).sort(
+            (a, b) => new Date(a).getTime() - new Date(b).getTime()
+          );
+          // Map weekKey to week number (1-based)
+          const weekNumberMap: { [key: string]: number } = {};
+          let weekNum = 1;
+          for (const wk of weekKeys) {
+            weekNumberMap[wk] = weekNum++;
+          }
+          return Object.entries(grouped).map(([key, txns]) => {
+            const groupTotal = txns.reduce(
+              (sum: number, t: TransactionType) => sum + t.amount,
+              0
+            );
+            const isExpanded = expandedGroups[key] || false;
+            return (
+              <div key={key} className="mt-2">
+                <div
+                  className={`flex items-center justify-between cursor-pointer p-2 rounded-lg ${
+                    theme === "light"
+                      ? "!bg-gray-100 !text-gray-800 border border-gray-200"
+                      : themeClass
+                  } transition-colors hover:bg-blue-50`}
+                  onClick={() =>
+                    setExpandedGroups((prev) => ({
+                      ...prev,
+                      [key]: !prev[key],
+                    }))
+                  }
+                >
+                  <div className="flex items-center">
+                    <span className="mr-2">
+                      <svg
+                        className={`w-4 h-4 inline transition-transform ${
+                          isExpanded ? "rotate-90" : "rotate-0"
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </span>
+                    <span className="font-semibold">
+                      {groupMode === "day"
+                        ? `${format(new Date(key), "dd MMM")} ${format(
+                            new Date(key),
+                            "EEEE"
+                          )}`
+                        : `Week ${weekNumberMap[key]}`}
+                    </span>
+                  </div>
+                  <span className="font-bold text-green-700">
+                    ₹{groupTotal}
+                  </span>
+                </div>
+                {isExpanded && (
+                  <div className="ml-6 mt-1">
+                    {groupMode === "week"
+                      ? (() => {
+                          const daysInWeek: {
+                            [day: string]: TransactionType[];
+                          } = {};
+                          txns.forEach((t) => {
+                            if (t.date) {
+                              const dayKey = format(
+                                new Date(t.date),
+                                "yyyy-MM-dd"
+                              );
+                              if (!daysInWeek[dayKey]) daysInWeek[dayKey] = [];
+                              daysInWeek[dayKey].push(t);
+                            }
+                          });
+                          const sortedDays = Object.keys(daysInWeek).sort(
+                            (a, b) =>
+                              new Date(a).getTime() - new Date(b).getTime()
+                          );
+                          return sortedDays.map((dayKey) => {
+                            const dayTxns = daysInWeek[dayKey];
+                            const dayTotal = dayTxns.reduce(
+                              (sum, t) => sum + t.amount,
+                              0
+                            );
+                            const isDayExpanded =
+                              expandedDaysByWeek[key]?.[dayKey] || false;
+                            return (
+                              <div key={dayKey} className="mb-2">
+                                <div
+                                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer ${
+                                    theme === "light"
+                                      ? "!bg-gray-50 !text-gray-800 border border-gray-100"
+                                      : themeClass
+                                  }`}
+                                  onClick={() => {
+                                    setExpandedDaysByWeek((prev) => ({
+                                      ...prev,
+                                      [key]: {
+                                        ...prev[key],
+                                        [dayKey]: !isDayExpanded,
+                                      },
+                                    }));
+                                  }}
+                                >
+                                  <div className="flex items-center">
+                                    <span className="mr-2">
+                                      <svg
+                                        className={`w-4 h-4 inline transition-transform ${
+                                          isDayExpanded
+                                            ? "rotate-90"
+                                            : "rotate-0"
+                                        }`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M9 5l7 7-7 7"
+                                        />
+                                      </svg>
+                                    </span>
+                                    <span className="font-semibold">
+                                      {format(new Date(dayKey), "dd MMM")}{" "}
+                                      {format(new Date(dayKey), "EEEE")}
+                                    </span>
+                                  </div>
+                                  <span className="font-bold text-blue-700">
+                                    ₹{dayTotal}
+                                  </span>
+                                </div>
+                                {isDayExpanded && (
+                                  <div className="ml-4 mt-1">
+                                    {dayTxns.map((t, idx) => (
+                                      <div
+                                        key={t.uid || idx}
+                                        className={`text-lg font-medium ${
+                                          theme === "light"
+                                            ? "!text-gray-800 !bg-white"
+                                            : themeClass
+                                        } p-2 rounded-lg mt-2 flex items-center`}
+                                      >
+                                        <span className="text-[inherit]">
+                                          {t.name}
+                                        </span>
+                                        :
+                                        <span className="text-green-600 ml-1">
+                                          ₹{t.amount}
+                                        </span>
+                                        {t.formattedTime && (
+                                          <span className="text-gray-500 text-xs ml-2">
+                                            {t.formattedTime}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()
+                      : txns.map((t, idx) => (
+                          <div
+                            key={t.uid || idx}
+                            className={`text-lg font-medium ${
+                              theme === "light"
+                                ? "!text-gray-800 !bg-gray-50 border border-gray-100"
+                                : themeClass
+                            } p-2 rounded-lg mt-2 flex items-center`}
+                          >
+                            <span className="text-[inherit]">{t.name}</span>:
+                            <span className="text-green-600 ml-1">
+                              ₹{t.amount}
+                            </span>
+                            {t.formattedTime && (
+                              <span className="text-gray-500 text-xs ml-2">
+                                {t.formattedTime}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })()
       ) : (
         <p className="text-sm text-gray-600 mt-2">
           No transactions found for {format(selectedMonth, "MMMM yyyy")}.
         </p>
-      )}
-
-      {isTransactionModalOpen && (
-        <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
-          <div
-            className={` ${
-              theme === "light" ? " !bg-white text-black" : themeClass
-            } p-6 rounded-lg w-[85%] max-w-xs `}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-[inherit]">
-                Edit Transactions
-              </h3>
-              {/* <button
-                onClick={() => {
-                  if (transactionModalData.length > 0) {
-                    setModalOpen(true);
-                  } else
-                    setAlert({ type: "error", message: "Nothing to delete" });
-                }}
-                className="text-red-500 font-bold"
-              >
-                Clear All
-              </button> */}
-            </div>
-            <div className="overflow-auto max-h-[50vh]">
-              <ul className="space-y-4">
-                {transactionModalData.map((transaction, index) => (
-                  <li
-                    key={index}
-                    className={` ${
-                      theme === "light" ? " !bg-black/5 text-black" : themeClass
-                    } flex justify-between items-center p-3 rounded-lg`}
-                  >
-                    <div className="text-[inherit]">
-                      {editIndex === index ? (
-                        <>
-                          <input
-                            type="text"
-                            value={
-                              tempName !== null ? tempName : transaction.name
-                            }
-                            onChange={(e) => setTempName(e.target.value)}
-                            className="border p-1 rounded w-40"
-                          />
-                          <input
-                            type="number"
-                            value={
-                              tempAmount !== null
-                                ? tempAmount
-                                : transaction.amount
-                            }
-                            onChange={(e) =>
-                              setTempAmount(parseFloat(e.target.value))
-                            }
-                            className="border p-1 rounded w-20 ml-2"
-                          />
-                        </>
-                      ) : (
-                        <>
-                          <span>{transaction.name}</span>:{" "}
-                          <span className="text-green-600">
-                            ₹{transaction.amount}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      {editIndex === index ? (
-                        <>
-                          <button
-                            onClick={() => {
-                              setEditIndex(null);
-                              setTempName(null);
-                              setTempAmount(null);
-                            }}
-                            className="text-red-500 ml-2"
-                          >
-                            <i className="bx bx-x"></i>
-                          </button>
-                          <button
-                            onClick={() => handleSave(index)}
-                            className="bg-green-500 text-white px-2 py-1 rounded"
-                            disabled={loadingIndex === index}
-                          >
-                            {loadingIndex === index ? (
-                              "⏳"
-                            ) : (
-                              <i className="bx bx-check"></i>
-                            )}
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setEditIndex(index);
-                            setTempName(transaction.name);
-                            setTempAmount(transaction.amount);
-                          }}
-                        >
-                          <i className="bx bx-edit-alt text-[inherit]"></i>
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(index)}
-                        className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
-                        disabled={loadingIndex === index}
-                      >
-                        {loadingIndex === index ? (
-                          "⏳"
-                        ) : (
-                          <i className="bx bx-trash"></i>
-                        )}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={() => setIsTransactionModalOpen(false)}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
