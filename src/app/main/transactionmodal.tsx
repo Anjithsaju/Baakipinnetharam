@@ -2,19 +2,40 @@ import { useEffect, useRef, useState } from "react";
 import { format, subMonths } from "date-fns"; // for formatting month names
 
 interface TransactionType {
-  uid?: string;
+  uid: string;
   name: string;
   amount: number;
   date?: string;
   formattedTime?: string;
 }
 
+import { Dispatch, SetStateAction } from "react";
+
 interface TransactionModalProps {
   transactions: TransactionType[];
   theme: string;
   themeClass: string;
-  setTransactionModalData: (data: TransactionType[]) => void;
+  setTransactionModalData: Dispatch<SetStateAction<TransactionType[]>>;
   setIsTransactionModalOpen: (open: boolean) => void;
+  editIndex: number | null;
+  setEditIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  tempName: string | null;
+  setTempName: React.Dispatch<React.SetStateAction<string | null>>;
+  tempAmount: number | null;
+  setTempAmount: React.Dispatch<React.SetStateAction<number | null>>;
+  loadingIndex: number | null;
+  setLoadingIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  handleSave: (index: number) => void;
+  handleDelete: (index: number) => void;
+  isTransactionModalOpen: boolean;
+  transactionModalData: TransactionType[];
+  alert: { type: "success" | "error" | "info"; message: string } | null;
+  setAlert: React.Dispatch<
+    React.SetStateAction<{
+      type: "success" | "error" | "info";
+      message: string;
+    } | null>
+  >;
 }
 
 const TransactionsCard: React.FC<TransactionModalProps> = ({
