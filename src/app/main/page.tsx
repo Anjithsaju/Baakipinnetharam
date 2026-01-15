@@ -475,7 +475,134 @@ export default function Home() {
           }}
         />
       )}
-
+      {isTransactionModalOpen && (
+        <div className="fixed inset-0  bg-opacity-50 flex justify-center items-center">
+          <div
+            className={` ${
+              theme === "light" ? " !bg-white text-black" : themeClass
+            } p-6 rounded-lg w-[85%] max-w-xs `}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-[inherit]">
+                Edit Transactions
+              </h3>
+              <button
+                onClick={() => {
+                  if (transactionModalData.length > 0) {
+                    setModalOpen(true);
+                  } else
+                    setAlert({ type: "error", message: "Nothing to delete" });
+                }}
+                className="text-red-500 font-bold"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="overflow-auto max-h-[50vh]">
+              <ul className="space-y-4">
+                {transactionModalData.map((transaction, index) => (
+                  <li
+                    key={index}
+                    className={` ${
+                      theme === "light" ? " !bg-black/5 text-black" : themeClass
+                    } flex justify-between items-center p-3 rounded-lg`}
+                  >
+                    <div className="text-[inherit]">
+                      {editIndex === index ? (
+                        <>
+                          <input
+                            type="text"
+                            value={
+                              tempName !== null ? tempName : transaction.name
+                            }
+                            onChange={(e) => setTempName(e.target.value)}
+                            className="border p-1 rounded w-40"
+                          />
+                          <input
+                            type="number"
+                            value={
+                              tempAmount !== null
+                                ? tempAmount
+                                : transaction.amount
+                            }
+                            onChange={(e) =>
+                              setTempAmount(parseFloat(e.target.value))
+                            }
+                            className="border p-1 rounded w-20 ml-2"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <span>{transaction.name}</span>:{" "}
+                          <span className="text-green-600">
+                            ₹{transaction.amount}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {editIndex === index ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setEditIndex(null);
+                              setTempName(null);
+                              setTempAmount(null);
+                            }}
+                            className="text-red-500 ml-2"
+                          >
+                            <i className="bx bx-x"></i>
+                          </button>
+                          <button
+                            onClick={() => handleSave(index)}
+                            className="bg-green-500 text-white px-2 py-1 rounded"
+                            disabled={loadingIndex === index}
+                          >
+                            {loadingIndex === index ? (
+                              "⏳"
+                            ) : (
+                              <i className="bx bx-check"></i>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setEditIndex(index);
+                            setTempName(transaction.name);
+                            setTempAmount(transaction.amount);
+                          }}
+                        >
+                          <i className="bx bx-edit-alt text-[inherit]"></i>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-black ml-2 bg-red-200 px-2 py-1 rounded"
+                        disabled={loadingIndex === index}
+                      >
+                        {loadingIndex === index ? (
+                          "⏳"
+                        ) : (
+                          <i className="bx bx-trash"></i>
+                        )}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setIsTransactionModalOpen(false)}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isAddModalOpen && (
         <Addmodal
           closeModal={() => {
